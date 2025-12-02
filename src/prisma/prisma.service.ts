@@ -6,6 +6,12 @@ export class PrismaService
   extends PrismaClient
   implements OnModuleInit, OnModuleDestroy
 {
+  constructor() {
+    // For Prisma v6 the schema `datasource` with `url = env("DATABASE_URL")`
+    // is the correct configuration. We don't need to pass datasources here.
+    super();
+  }
+
   async onModuleInit() {
     await this.$connect();
   }
