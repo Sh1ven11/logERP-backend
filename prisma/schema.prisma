@@ -14,3 +14,24 @@ model user{
   @@map("users")
 
 }
+model Customer {
+  id           Int      @id @default(autoincrement())
+  companyCode  String   @unique           // legacy code
+  companyName  String                     // shown in ERP
+  billName     String                     // appears on bills
+  companyGroup String?                    // grouping/bucket
+
+  address1     String?
+  address2     String?
+  address3     String?
+
+  phone        String?
+
+  debit        Float    @default(0)       // accounting fields
+  credit       Float    @default(0)
+  creditDays   Int?                       // allowed days
+  interestRate Float?                     // percent interest
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
