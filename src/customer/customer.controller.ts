@@ -4,7 +4,7 @@ import { CreateCustomerDto } from './dto/create-customer.dto';
 import { EditCustomerDto } from './dto/edit-customer.dto';
 import { Query } from '@nestjs/common';
 import { UseGuards } from '@nestjs/common';
-import { JwtGuard } from 'src/auth/guard';
+import { JwtGuard } from 'src/common/guard';
 @UseGuards(JwtGuard)
 @Controller('customers')
 export class CustomerController {
