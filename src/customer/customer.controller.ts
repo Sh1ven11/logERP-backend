@@ -3,7 +3,9 @@ import { CustomerService } from './customer.service';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { EditCustomerDto } from './dto/edit-customer.dto';
 import { Query } from '@nestjs/common';
-
+import { UseGuards } from '@nestjs/common';
+import { JwtGuard } from 'src/auth/guard';
+@UseGuards(JwtGuard)
 @Controller('customers')
 export class CustomerController {
   constructor(private customerService: CustomerService) {}
