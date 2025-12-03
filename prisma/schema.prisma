@@ -37,3 +37,15 @@ model Customer {
 
 
 }
+model Broker {
+  id            Int      @id @default(autoincrement())
+  brokerCode    String   @unique
+  name          String
+  address       String
+  phoneNo       String
+  panCard       String?
+  tdsPercentage Float    @default(0)
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
