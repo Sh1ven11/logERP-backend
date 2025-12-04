@@ -54,6 +54,8 @@ model Company {
   customers         Customer[]
   brokers           Broker[]
   customerGroups CustomerGroup[]
+  lorryOwners LorryOwner[]
+
 
 }
 
@@ -155,6 +157,26 @@ model Broker {
 
   consignmentNotes ConsignmentNote[]
 }
+model LorryOwner {
+  id         Int      @id @default(autoincrement())
+  name       String
+
+  address1   String?
+  address2   String?
+  address3   String?
+
+  panNumber  String?   @unique
+
+  companyId  Int
+  company    Company   @relation(fields: [companyId], references: [id])
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // In the future: link to Lorry Hire Challans
+  // challans LorryHireChallan[]
+}
+
 
 //
 // Logistics - Consignment Note
