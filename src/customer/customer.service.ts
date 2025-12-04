@@ -29,38 +29,57 @@ export class CustomerService {
   getAll() {
     return this.prisma.customer.findMany();
   }
-    async search(filters: {
+
+  async search(filters: {
     name?: string;
-    group?: string;
+    group?: string;   // groupName
     code?: string;
     query?: string;
-    }) {
-    const { name, group, code, query } = filters;
+  }) {
+        const { name, group, code, query } = filters;
 
-    return this.prisma.customer.findMany({
-        where: {
-        AND: [
-            name
-            ? { companyName: { contains: name, mode: 'insensitive' } }
-            : {},
-            group
-            ? { companyGroup: { contains: group, mode: 'insensitive' } }
-            : {},
-            code
-            ? { companyCode: { contains: code, mode: 'insensitive' } }
-            : {},
-            query
-            ? {
-                OR: [
-                    { companyName: { contains: query, mode: 'insensitive' } },
-                    { companyGroup: { contains: query, mode: 'insensitive' } },
-                    { companyCode: { contains: query, mode: 'insensitive' } },
-                ],
-                }
-            : {},
-        ],
-        },
-    });
-    }
+        return this.prisma.customer.findMany({
+          where: {
+            AND: [
+              // Search by companyName
+              name
+                ? { companyName: { contains: name, mode: 'insensitive' } }
+                : {},
+
+              // Search by group name (fixed)
+              group
+                ? {
+                    group: {
+                      name: { contains: group, mode: 'insensitive' },
+                    },
+                  }
+                : {},
+
+              // Search by companyCode
+              code
+                ? { companyCode: { contains: code, mode: 'insensitive' } }
+                : {},
+
+              // Global search (fixed)
+              query
+                ? {
+                    OR: [
+                      { companyName: { contains: query, mode: 'insensitive' } },
+
+                      {
+                        group: {
+                          name: { contains: query, mode: 'insensitive' },
+                        },
+                      },
+
+                      { companyCode: { contains: query, mode: 'insensitive' } },
+                    ],
+                  }
+                : {},
+            ],
+          },
+        });
+  }
+
 
 }

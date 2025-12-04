@@ -1,15 +1,12 @@
-import { IsNotEmpty, IsOptional, IsString, IsNumber } from "class-validator";
+import { IsString, IsOptional, IsInt, IsNumber } from 'class-validator';
 
 export class CreateCustomerDto {
-  @IsNotEmpty()
   @IsString()
   companyCode: string;
 
-  @IsNotEmpty()
   @IsString()
   companyName: string;
 
-  @IsNotEmpty()
   @IsString()
   billName: string;
 
@@ -42,10 +39,14 @@ export class CreateCustomerDto {
   credit?: number;
 
   @IsOptional()
-  @IsNumber()
+  @IsInt()
   creditDays?: number;
 
   @IsOptional()
   @IsNumber()
   interestRate?: number;
+
+  @IsInt()
+  companyId: number;   // 🔥 REQUIRED
+
 }

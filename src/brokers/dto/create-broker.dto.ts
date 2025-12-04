@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsNumber } from 'class-validator';
+import { IsString, IsOptional, IsNumber, IsInt } from 'class-validator';
 
 export class CreateBrokerDto {
   @IsString()
@@ -24,4 +24,9 @@ export class CreateBrokerDto {
   @IsOptional()
   @IsString()
   notes?: string;
+
+  @IsInt()
+  companyId: number;   // 🔥 REQUIRED for multi-tenant architecture
+
+     // Optional — if brokers may belong to a specific branch
 }
