@@ -7,15 +7,23 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-//erp using info tables
-model User {
-  id        Int      @id @default(autoincrement())
-  username  String   @unique
-  password  String
-  createdAt DateTime @default(now())
+//
+// =========================
+//         MODELS
+// =========================
+//
 
-  companies UserCompany[]
+model User {
+  id        Int            @id @default(autoincrement())
+  username  String         @unique
+  password  String
+  createdAt DateTime       @default(now())
+
+  // Relations
+  companies          UserCompany[]
+  createdConsignments ConsignmentNote[] @relation("UserCreatedConsignments")
 }
+
 model UserCompany {
   id        Int       @id @default(autoincrement())
 
@@ -26,7 +34,9 @@ model UserCompany {
   user      User      @relation(fields: [userId], references: [id])
   company   Company   @relation(fields: [companyId], references: [id])
 
+  @@unique([userId, companyId])
 }
+
 model Company {
   id        Int       @id @default(autoincrement())
   name      String
@@ -36,25 +46,52 @@ model Company {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
-  branches  Branch[]
-  users     UserCompany[]
+  // Relations
+  branches          Branch[]
+  users             UserCompany[]
+  financialYears    FinancialYear[]
+  consignmentNotes  ConsignmentNote[]
+  customers         Customer[]
+  brokers           Broker[]
+  customerGroups CustomerGroup[]
+
 }
 
 model Branch {
   id        Int       @id @default(autoincrement())
   name      String
-  code      String    @unique   // ADD THIS
+  code      String    @unique
   address   String?
   phone     String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   companyId Int
-  company   Company @relation(fields: [companyId], references: [id])
+  company   Company   @relation(fields: [companyId], references: [id])
+
+  // Relations
+  consignmentNotes ConsignmentNote[]
+  customers        Customer[]
+  brokers          Broker[]
 }
 
+model FinancialYear {
+  id         Int      @id @default(autoincrement())
+  yearLabel  String   // Example: "2024-2025"
 
-//outside entities
+  startDate  DateTime // 2024-04-01
+  endDate    DateTime // 2025-03-31
+
+  companyId  Int
+  company    Company  @relation(fields: [companyId], references: [id])
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relations
+  consignmentNotes ConsignmentNote[]
+}
+//Output models for Customer, CustomerGroup, Broker, ConsignmentNote
 model Customer {
   id           Int      @id @default(autoincrement())
   companyCode  String   @unique
@@ -77,6 +114,14 @@ model Customer {
 
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+
+  // Relations
+  company   Company @relation(fields: [companyId], references: [id])
+  branch    Branch? @relation(fields: [branchId], references: [id])
+
+  // opposite relations for consignments
+  consignmentsAsConsignor  ConsignmentNote[] @relation("ConsignorRelation")
+  consignmentsAsConsignee  ConsignmentNote[] @relation("ConsigneeRelation")
 }
 
 model CustomerGroup {
@@ -84,6 +129,7 @@ model CustomerGroup {
   name      String
   companyId Int
 
+  company   Company  @relation(fields: [companyId], references: [id])
   customers Customer[]
 }
 
@@ -102,6 +148,65 @@ model Broker {
 
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+
+  // Relations
+  company  Company @relation(fields: [companyId], references: [id])
+  branch   Branch? @relation(fields: [branchId], references: [id])
+
+  consignmentNotes ConsignmentNote[]
 }
 
+//
+// Logistics - Consignment Note
+//
+model ConsignmentNote {
+  id              Int      @id @default(autoincrement())
+  cnNumber        String
 
+  // CN number must be unique per company and financial year
+  @@unique([companyId, financialYearId, cnNumber])
+
+  date            DateTime
+  financialYearId Int
+  companyId       Int
+  branchId        Int
+
+  consignorId     Int
+  consigneeId     Int
+
+  fromLocation    String
+  toLocation      String
+
+  packages        Int
+  packageUom      String   // lot, set, bags
+  contents        String?
+
+  gstPayableAt    String?
+  netWeight       Float?
+  grossWeight     Float?
+  chargeWeight    Float?
+  weightUom       String   // fixed, mt
+
+  rate            Float?
+  rateOn          String?
+  freightCharges  Float?
+
+  vehicleNo       String?
+  driverName      String?
+  remarks         String?
+
+  brokerId        Int?
+  createdByUserId Int
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // RELATIONS
+  company         Company        @relation(fields: [companyId], references: [id])
+  branch          Branch         @relation(fields: [branchId], references: [id])
+  consignor       Customer       @relation("ConsignorRelation", fields: [consignorId], references: [id])
+  consignee       Customer       @relation("ConsigneeRelation", fields: [consigneeId], references: [id])
+  broker          Broker?        @relation(fields: [brokerId], references: [id])
+  financialYear   FinancialYear  @relation(fields: [financialYearId], references: [id])
+  createdBy       User           @relation("UserCreatedConsignments", fields: [createdByUserId], references: [id])
+}

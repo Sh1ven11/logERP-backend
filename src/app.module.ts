@@ -8,8 +8,9 @@ import { CustomerService } from './customer/customer.service';
 import { BrokersModule } from './brokers/brokers.module';
 import { CompanyModule } from './company/company.module';
 import { CustomerGroupModule } from './customer-group/customer-group.module';
+import { ConsignmentModule } from './consignment/consignment.module';
 @Module({
-  imports: [PrismaModule, AuthModule, ConfigModule.forRoot({ isGlobal: true }), CustomerModule, BrokersModule, CompanyModule, CustomerGroupModule],
+  imports: [PrismaModule, AuthModule, ConfigModule.forRoot({ isGlobal: true }), CustomerModule, BrokersModule, CompanyModule, CustomerGroupModule, ConsignmentModule],
   controllers: [UserController],
 })
 export class AppModule {}

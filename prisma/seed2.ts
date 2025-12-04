@@ -11,7 +11,7 @@ async function main() {
     where: { code: "CMP001" },
     update: {},
     create: {
-      name: "Jindal Industries",
+      name: "KTPL",
       code: "CMP001",
       address: "Mumbai",
       phone: "9999999999",
@@ -22,7 +22,7 @@ async function main() {
     where: { code: "CMP002" },
     update: {},
     create: {
-      name: "Tata Steels",
+      name: "MLPL",
       code: "CMP002",
       address: "Pune",
       phone: "8888888888",
@@ -69,7 +69,32 @@ async function main() {
   });
 
   // -----------------------------
-  // 3. USER COMPANY ROLES
+  // 3. FINANCIAL YEARS
+  // -----------------------------
+  const fyA2024 = await prisma.financialYear.upsert({
+    where: { id: 1 },
+    update: {},
+    create: {
+      yearLabel: "2024-2025",
+      startDate: new Date("2024-04-01"),
+      endDate: new Date("2025-03-31"),
+      companyId: companyA.id,
+    },
+  });
+
+  const fyB2024 = await prisma.financialYear.upsert({
+    where: { id: 2 },
+    update: {},
+    create: {
+      yearLabel: "2024-2025",
+      startDate: new Date("2024-04-01"),
+      endDate: new Date("2025-03-31"),
+      companyId: companyB.id,
+    },
+  });
+
+  // -----------------------------
+  // 4. USER COMPANY ROLES
   // -----------------------------
   const userShiven = await prisma.user.findUnique({ where: { username: "shiven" } });
   const userArvind = await prisma.user.findUnique({ where: { username: "arvind" } });
@@ -109,7 +134,7 @@ async function main() {
   });
 
   // -----------------------------
-  // 4. CUSTOMER GROUPS
+  // 5. CUSTOMER GROUPS
   // -----------------------------
   const groupJindal = await prisma.customerGroup.upsert({
     where: { id: 1 },
@@ -130,7 +155,7 @@ async function main() {
   });
 
   // -----------------------------
-  // 5. CUSTOMERS
+  // 6. CUSTOMERS
   // -----------------------------
   await prisma.customer.createMany({
     data: [
@@ -175,7 +200,7 @@ async function main() {
   });
 
   // -----------------------------
-  // 6. BROKERS
+  // 7. BROKERS
   // -----------------------------
   await prisma.broker.createMany({
     data: [
@@ -209,6 +234,119 @@ async function main() {
     ],
     skipDuplicates: true,
   });
+  // -----------------------------
+// 8. CONSIGNMENT NOTES
+// -----------------------------
+await prisma.consignmentNote.createMany({
+  data: [
+    {
+      cnNumber: "1001",
+      date: new Date("2024-04-10"),
+      financialYearId: fyA2024.id,
+      companyId: companyA.id,
+      branchId: branchA1.id,
+
+      consignorId: 1,  // JDL Pune
+      consigneeId: 2,  // JDL Mumbai
+
+      fromLocation: "Pune Warehouse",
+      toLocation: "Mumbai Depot",
+
+      packages: 12,
+      packageUom: "bags",
+      contents: "Steel Rods",
+
+      gstPayableAt: "Destination",
+      netWeight: 950,
+      grossWeight: 1000,
+      chargeWeight: 980,
+      weightUom: "mt",
+
+      rate: 150,
+      rateOn: "mt",
+      freightCharges: 147000,
+
+      vehicleNo: "MH12AB1234",
+      driverName: "Ramesh Kumar",
+      remarks: "Handle with care",
+
+      brokerId: 1,
+      createdByUserId: userShiven.id
+    },
+
+    {
+      cnNumber: "1002",
+      date: new Date("2024-05-02"),
+      financialYearId: fyA2024.id,
+      companyId: companyA.id,
+      branchId: branchA2.id,
+
+      consignorId: 2,  
+      consigneeId: 1,  
+
+      fromLocation: "Mumbai Dock",
+      toLocation: "Pune Factory",
+
+      packages: 8,
+      packageUom: "lot",
+      contents: "Scrap Metal",
+
+      gstPayableAt: "Origin",
+      netWeight: 500,
+      grossWeight: 540,
+      chargeWeight: 520,
+      weightUom: "mt",
+
+      rate: 200,
+      rateOn: "fixed",
+      freightCharges: 200,
+
+      vehicleNo: "MH14XY9876",
+      driverName: "Suresh Patil",
+      remarks: "",
+
+      brokerId: 2,
+      createdByUserId: userShiven.id
+    },
+
+    {
+      cnNumber: "2001",
+      date: new Date("2024-04-15"),
+      financialYearId: fyB2024.id,
+      companyId: companyB.id,
+      branchId: branchB1.id,
+
+      consignorId: 3,  // TATA Hyderabad
+      consigneeId: 1,  // Jindal Pune (cross-company test)
+
+      fromLocation: "Hyderabad Plant",
+      toLocation: "Pune Warehouse",
+
+      packages: 15,
+      packageUom: "set",
+      contents: "Steel Billets",
+
+      gstPayableAt: "Destination",
+      netWeight: 1200,
+      grossWeight: 1250,
+      chargeWeight: 1220,
+      weightUom: "mt",
+
+      rate: 180,
+      rateOn: "mt",
+      freightCharges: 219600,
+
+      vehicleNo: "TS09CZ4321",
+      driverName: "Mahesh Gowda",
+      remarks: "Urgent dispatch",
+
+      brokerId: 3,
+      createdByUserId: userArvind.id
+    }
+  ],
+  skipDuplicates: true,
+});
+
 
   console.log("Seed 2 completed successfully!");
 }
