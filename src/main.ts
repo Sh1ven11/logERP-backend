@@ -7,6 +7,13 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
+  // 🔹 ENABLE CORS (allow all origins for now)
+  app.enableCors({
+    origin: '*',                 // allow any frontend
+    methods: 'GET,POST,PUT,PATCH,DELETE,OPTIONS',
+    allowedHeaders: 'Content-Type, Authorization',
+  });
+
   // 🔹 GLOBAL VALIDATION PIPE
   app.useGlobalPipes(
     new ValidationPipe({
@@ -22,7 +29,7 @@ async function bootstrap() {
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, document); // <--- http://localhost:3333/api
+  SwaggerModule.setup('api', app, document);
 
   // 🔹 START SERVER
   await app.listen(process.env.PORT || 3333);
