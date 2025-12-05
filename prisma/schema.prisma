@@ -251,3 +251,81 @@ model ConsignmentNote {
   financialYear   FinancialYear  @relation(fields: [financialYearId], references: [id])
   createdBy       User           @relation("UserCreatedConsignments", fields: [createdByUserId], references: [id])
 }
+model LorryHireChallan {
+  id              Int      @id @default(autoincrement())
+  challanNumber   String
+  challanDate     DateTime
+  lorryHireDate   DateTime?
+
+  vehicleNo       String
+  slipNo          String?
+  remarks         String?
+
+  // Relations
+  lorryOwnerId    Int
+  lorryOwner      LorryOwner @relation(fields: [lorryOwnerId], references: [id])
+
+  brokerId        Int?
+  broker          Broker?    @relation(fields: [brokerId], references: [id])
+
+  panCardUsed     String?     // PAN used for TDS check
+  tdsApplicable   Boolean     @default(false)
+  tdsPercent      Float?      
+  // (TDS amount can be computed → (lorryHire * tdsPercent) / 100 )
+
+  destinationId   Int
+  destination     Destination @relation(fields: [destinationId], references: [id])
+
+  // Summary Values
+  totalPackages   Int?    @default(0)
+  totalWeight     Float?  @default(0)
+
+  rate            Float?
+  lorryHire       Float?
+  advancePaid     Float?  @default(0)
+  balancePayable  Float?  @default(0)
+
+  // Additional Charges
+  loadingCharges   Float? @default(0)
+  unloadingCharges Float? @default(0)
+  dieselAdvance    Float? @default(0)
+
+  // GST Details
+  gstApplicable    Boolean @default(false)
+  gstAmount        Float?  @default(0)
+
+  // Settlement Info
+  isSettled        Boolean @default(false)
+  paymentDate      DateTime?
+
+  consignmentCount Int?    @default(0)
+
+  // Multi-tenancy
+  companyId        Int
+  branchId         Int
+  financialYearId  Int
+
+  company          Company       @relation(fields: [companyId], references: [id])
+  branch           Branch        @relation(fields: [branchId], references: [id])
+  financialYear    FinancialYear @relation(fields: [financialYearId], references: [id])
+
+  // Consignments Link
+  consignments     LorryHireChallanConsignment[]
+
+  createdByUserId  Int
+  createdBy        User @relation(fields: [createdByUserId], references: [id])
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model LorryHireChallanConsignment {
+  id            Int @id @default(autoincrement())
+  challanId     Int
+  consignmentId Int
+
+  challan       LorryHireChallan @relation(fields: [challanId], references: [id])
+  consignment   ConsignmentNote  @relation(fields: [consignmentId], references: [id])
+
+  @@unique([challanId, consignmentId])
+}

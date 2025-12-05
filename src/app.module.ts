@@ -11,8 +11,9 @@ import { CustomerGroupModule } from './customer-group/customer-group.module';
 import { ConsignmentModule } from './consignment/consignment.module';
 import { LorryOwnerModule } from './lorry-owner/lorry-owner.module';
 import { DestinationModule } from './destination/destination.module';
+import { LorryHireModule } from './lorry-hire/lorry-hire.module';
 @Module({
-  imports: [PrismaModule, AuthModule, ConfigModule.forRoot({ isGlobal: true }), CustomerModule, BrokersModule, CompanyModule, CustomerGroupModule, ConsignmentModule, LorryOwnerModule, DestinationModule],
+  imports: [PrismaModule, AuthModule, ConfigModule.forRoot({ isGlobal: true }), CustomerModule, BrokersModule, CompanyModule, CustomerGroupModule, ConsignmentModule, LorryOwnerModule, DestinationModule, LorryHireModule],
   controllers: [UserController],
 })
 export class AppModule {}
