@@ -20,8 +20,11 @@ model User {
   createdAt DateTime       @default(now())
 
   // Relations
-  companies          UserCompany[]
-  createdConsignments ConsignmentNote[] @relation("UserCreatedConsignments")
+  companies            UserCompany[]
+  createdConsignments  ConsignmentNote[] @relation("UserCreatedConsignments")
+
+  // ⭐ ADDED
+  createdLorryHireChallans LorryHireChallan[] @relation("UserCreatedLorryHireChallan")
 }
 
 model UserCompany {
@@ -29,7 +32,7 @@ model UserCompany {
 
   userId    Int
   companyId Int
-  role      String    @default("user")  // admin, manager, viewer, etc.
+  role      String    @default("user")
 
   user      User      @relation(fields: [userId], references: [id])
   company   Company   @relation(fields: [companyId], references: [id])
@@ -40,23 +43,23 @@ model UserCompany {
 model Company {
   id        Int       @id @default(autoincrement())
   name      String
-  code      String    @unique       // legacy or custom company code
+  code      String    @unique
   address   String?
   phone     String?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
-  // Relations
   branches          Branch[]
   users             UserCompany[]
   financialYears    FinancialYear[]
   consignmentNotes  ConsignmentNote[]
   customers         Customer[]
   brokers           Broker[]
-  customerGroups CustomerGroup[]
-  lorryOwners LorryOwner[]
+  customerGroups    CustomerGroup[]
+  lorryOwners       LorryOwner[]
 
-
+  // ⭐ ADDED
+  lorryHireChallans LorryHireChallan[]
 }
 
 model Branch {
@@ -71,18 +74,20 @@ model Branch {
   companyId Int
   company   Company   @relation(fields: [companyId], references: [id])
 
-  // Relations
   consignmentNotes ConsignmentNote[]
   customers        Customer[]
   brokers          Broker[]
+
+  // ⭐ ADDED
+  lorryHireChallans LorryHireChallan[]
 }
 
 model FinancialYear {
   id         Int      @id @default(autoincrement())
-  yearLabel  String   // Example: "2024-2025"
+  yearLabel  String
 
-  startDate  DateTime // 2024-04-01
-  endDate    DateTime // 2025-03-31
+  startDate  DateTime
+  endDate    DateTime
 
   companyId  Int
   company    Company  @relation(fields: [companyId], references: [id])
@@ -90,9 +95,12 @@ model FinancialYear {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  // Relations
   consignmentNotes ConsignmentNote[]
+
+  // ⭐ ADDED
+  lorryHireChallans LorryHireChallan[]
 }
+
 model Destination {
   id        Int      @id @default(autoincrement())
   name      String
@@ -106,9 +114,11 @@ model Destination {
 
   consignmentsFrom ConsignmentNote[] @relation("FromDestination")
   consignmentsTo   ConsignmentNote[] @relation("ToDestination")
+
+  // ⭐ ADDED
+  lorryHireChallans LorryHireChallan[]
 }
 
-//Output models for Customer, CustomerGroup, Broker, ConsignmentNote
 model Customer {
   id           Int      @id @default(autoincrement())
   companyCode  String   @unique
@@ -132,11 +142,9 @@ model Customer {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  // Relations
   company   Company @relation(fields: [companyId], references: [id])
   branch    Branch? @relation(fields: [branchId], references: [id])
 
-  // opposite relations for consignments
   consignmentsAsConsignor  ConsignmentNote[] @relation("ConsignorRelation")
   consignmentsAsConsignee  ConsignmentNote[] @relation("ConsigneeRelation")
 }
@@ -166,12 +174,15 @@ model Broker {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  // Relations
   company  Company @relation(fields: [companyId], references: [id])
   branch   Branch? @relation(fields: [branchId], references: [id])
 
   consignmentNotes ConsignmentNote[]
+
+  // ⭐ ADDED
+  lorryHireChallans LorryHireChallan[]
 }
+
 model LorryOwner {
   id         Int      @id @default(autoincrement())
   name       String
@@ -188,10 +199,9 @@ model LorryOwner {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  // In the future: link to Lorry Hire Challans
-  // challans LorryHireChallan[]
+  // ⭐ ADDED
+  lorryHireChallans LorryHireChallan[]
 }
-
 
 //
 // Logistics - Consignment Note
@@ -200,14 +210,12 @@ model ConsignmentNote {
   id              Int      @id @default(autoincrement())
   cnNumber        String
 
-  // CN number must be unique per company and financial year
   @@unique([companyId, financialYearId, cnNumber])
 
   date            DateTime
   financialYearId Int
   companyId       Int
   branchId        Int
-
   consignorId     Int
   consigneeId     Int
 
@@ -217,16 +225,15 @@ model ConsignmentNote {
   fromDestination Destination @relation("FromDestination", fields: [fromDestinationId], references: [id])
   toDestination   Destination @relation("ToDestination", fields: [toDestinationId], references: [id])
 
-
   packages        Int
-  packageUom      String   // lot, set, bags
+  packageUom      String
   contents        String?
 
   gstPayableAt    String?
   netWeight       Float?
   grossWeight     Float?
   chargeWeight    Float?
-  weightUom       String   // fixed, mt
+  weightUom       String
 
   rate            Float?
   rateOn          String?
@@ -242,7 +249,6 @@ model ConsignmentNote {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  // RELATIONS
   company         Company        @relation(fields: [companyId], references: [id])
   branch          Branch         @relation(fields: [branchId], references: [id])
   consignor       Customer       @relation("ConsignorRelation", fields: [consignorId], references: [id])
@@ -250,7 +256,11 @@ model ConsignmentNote {
   broker          Broker?        @relation(fields: [brokerId], references: [id])
   financialYear   FinancialYear  @relation(fields: [financialYearId], references: [id])
   createdBy       User           @relation("UserCreatedConsignments", fields: [createdByUserId], references: [id])
+
+  // ⭐ ADDED
+  lorryHireChallanConsignments LorryHireChallanConsignment[]
 }
+
 model LorryHireChallan {
   id              Int      @id @default(autoincrement())
   challanNumber   String
@@ -261,46 +271,38 @@ model LorryHireChallan {
   slipNo          String?
   remarks         String?
 
-  // Relations
   lorryOwnerId    Int
   lorryOwner      LorryOwner @relation(fields: [lorryOwnerId], references: [id])
 
   brokerId        Int?
   broker          Broker?    @relation(fields: [brokerId], references: [id])
 
-  panCardUsed     String?     // PAN used for TDS check
-  tdsApplicable   Boolean     @default(false)
-  tdsPercent      Float?      
-  // (TDS amount can be computed → (lorryHire * tdsPercent) / 100 )
+  panCardUsed     String?
+  tdsApplicable   Boolean @default(false)
+  tdsPercent      Float?
 
   destinationId   Int
   destination     Destination @relation(fields: [destinationId], references: [id])
 
-  // Summary Values
   totalPackages   Int?    @default(0)
   totalWeight     Float?  @default(0)
-
   rate            Float?
   lorryHire       Float?
   advancePaid     Float?  @default(0)
   balancePayable  Float?  @default(0)
 
-  // Additional Charges
   loadingCharges   Float? @default(0)
   unloadingCharges Float? @default(0)
   dieselAdvance    Float? @default(0)
 
-  // GST Details
   gstApplicable    Boolean @default(false)
   gstAmount        Float?  @default(0)
 
-  // Settlement Info
   isSettled        Boolean @default(false)
   paymentDate      DateTime?
 
   consignmentCount Int?    @default(0)
 
-  // Multi-tenancy
   companyId        Int
   branchId         Int
   financialYearId  Int
@@ -309,11 +311,10 @@ model LorryHireChallan {
   branch           Branch        @relation(fields: [branchId], references: [id])
   financialYear    FinancialYear @relation(fields: [financialYearId], references: [id])
 
-  // Consignments Link
   consignments     LorryHireChallanConsignment[]
 
   createdByUserId  Int
-  createdBy        User @relation(fields: [createdByUserId], references: [id])
+  createdBy        User @relation("UserCreatedLorryHireChallan", fields: [createdByUserId], references: [id])
 
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
