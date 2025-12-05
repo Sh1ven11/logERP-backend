@@ -103,34 +103,13 @@ async function main() {
     throw new Error("Users from Seed 1 must exist before running Seed 2.");
   }
 
-  await prisma.userCompany.upsert({
-    where: { id: 1 },
-    update: {},
-    create: {
-      userId: userShiven.id,
-      companyId: companyA.id,
-      role: "admin",
-    },
-  });
-
-  await prisma.userCompany.upsert({
-    where: { id: 2 },
-    update: {},
-    create: {
-      userId: userShiven.id,
-      companyId: companyB.id,
-      role: "manager",
-    },
-  });
-
-  await prisma.userCompany.upsert({
-    where: { id: 3 },
-    update: {},
-    create: {
-      userId: userArvind.id,
-      companyId: companyA.id,
-      role: "viewer",
-    },
+  await prisma.userCompany.createMany({
+    data: [
+      { id: 1, userId: userShiven.id, companyId: companyA.id, role: "admin" },
+      { id: 2, userId: userShiven.id, companyId: companyB.id, role: "manager" },
+      { id: 3, userId: userArvind.id, companyId: companyA.id, role: "viewer" },
+    ],
+    skipDuplicates: true,
   });
 
   // -----------------------------
@@ -234,125 +213,139 @@ async function main() {
     ],
     skipDuplicates: true,
   });
+
   // -----------------------------
-// 8. CONSIGNMENT NOTES
-// -----------------------------
-await prisma.consignmentNote.createMany({
-  data: [
-    {
-      cnNumber: "1001",
-      date: new Date("2024-04-10"),
-      financialYearId: fyA2024.id,
-      companyId: companyA.id,
-      branchId: branchA1.id,
+  // 8. DESTINATIONS (NEW)
+  // -----------------------------
+  const destPune = await prisma.destination.create({
+    data: { name: "Pune", state: "MH", pincode: "411001" },
+  });
 
-      consignorId: 1,  // JDL Pune
-      consigneeId: 2,  // JDL Mumbai
+  const destMumbai = await prisma.destination.create({
+    data: { name: "Mumbai", state: "MH", pincode: "400001" },
+  });
 
-      fromLocation: "Pune Warehouse",
-      toLocation: "Mumbai Depot",
+  const destHyd = await prisma.destination.create({
+    data: { name: "Hyderabad", state: "TG", pincode: "500001" },
+  });
 
-      packages: 12,
-      packageUom: "bags",
-      contents: "Steel Rods",
+  // -----------------------------
+  // 9. CONSIGNMENT NOTES (Updated)
+  // -----------------------------
+  await prisma.consignmentNote.createMany({
+    data: [
+      {
+        cnNumber: "1001",
+        date: new Date("2024-04-10"),
+        financialYearId: fyA2024.id,
+        companyId: companyA.id,
+        branchId: branchA1.id,
 
-      gstPayableAt: "Destination",
-      netWeight: 950,
-      grossWeight: 1000,
-      chargeWeight: 980,
-      weightUom: "mt",
+        consignorId: 1,
+        consigneeId: 2,
 
-      rate: 150,
-      rateOn: "mt",
-      freightCharges: 147000,
+        fromDestinationId: destPune.id,
+        toDestinationId: destMumbai.id,
 
-      vehicleNo: "MH12AB1234",
-      driverName: "Ramesh Kumar",
-      remarks: "Handle with care",
+        packages: 12,
+        packageUom: "bags",
+        contents: "Steel Rods",
 
-      brokerId: 1,
-      createdByUserId: userShiven.id
-    },
+        gstPayableAt: "Destination",
+        netWeight: 950,
+        grossWeight: 1000,
+        chargeWeight: 980,
+        weightUom: "mt",
 
-    {
-      cnNumber: "1002",
-      date: new Date("2024-05-02"),
-      financialYearId: fyA2024.id,
-      companyId: companyA.id,
-      branchId: branchA2.id,
+        rate: 150,
+        rateOn: "mt",
+        freightCharges: 147000,
 
-      consignorId: 2,  
-      consigneeId: 1,  
+        vehicleNo: "MH12AB1234",
+        driverName: "Ramesh Kumar",
+        remarks: "Handle with care",
 
-      fromLocation: "Mumbai Dock",
-      toLocation: "Pune Factory",
+        brokerId: 1,
+        createdByUserId: userShiven.id,
+      },
 
-      packages: 8,
-      packageUom: "lot",
-      contents: "Scrap Metal",
+      {
+        cnNumber: "1002",
+        date: new Date("2024-05-02"),
+        financialYearId: fyA2024.id,
+        companyId: companyA.id,
+        branchId: branchA2.id,
 
-      gstPayableAt: "Origin",
-      netWeight: 500,
-      grossWeight: 540,
-      chargeWeight: 520,
-      weightUom: "mt",
+        consignorId: 2,
+        consigneeId: 1,
 
-      rate: 200,
-      rateOn: "fixed",
-      freightCharges: 200,
+        fromDestinationId: destMumbai.id,
+        toDestinationId: destPune.id,
 
-      vehicleNo: "MH14XY9876",
-      driverName: "Suresh Patil",
-      remarks: "",
+        packages: 8,
+        packageUom: "lot",
+        contents: "Scrap Metal",
 
-      brokerId: 2,
-      createdByUserId: userShiven.id
-    },
+        gstPayableAt: "Origin",
+        netWeight: 500,
+        grossWeight: 540,
+        chargeWeight: 520,
+        weightUom: "mt",
 
-    {
-      cnNumber: "2001",
-      date: new Date("2024-04-15"),
-      financialYearId: fyB2024.id,
-      companyId: companyB.id,
-      branchId: branchB1.id,
+        rate: 200,
+        rateOn: "fixed",
+        freightCharges: 200,
 
-      consignorId: 3,  // TATA Hyderabad
-      consigneeId: 1,  // Jindal Pune (cross-company test)
+        vehicleNo: "MH14XY9876",
+        driverName: "Suresh Patil",
+        remarks: "",
 
-      fromLocation: "Hyderabad Plant",
-      toLocation: "Pune Warehouse",
+        brokerId: 2,
+        createdByUserId: userShiven.id,
+      },
 
-      packages: 15,
-      packageUom: "set",
-      contents: "Steel Billets",
+      {
+        cnNumber: "2001",
+        date: new Date("2024-04-15"),
+        financialYearId: fyB2024.id,
+        companyId: companyB.id,
+        branchId: branchB1.id,
 
-      gstPayableAt: "Destination",
-      netWeight: 1200,
-      grossWeight: 1250,
-      chargeWeight: 1220,
-      weightUom: "mt",
+        consignorId: 3,
+        consigneeId: 1,
 
-      rate: 180,
-      rateOn: "mt",
-      freightCharges: 219600,
+        fromDestinationId: destHyd.id,
+        toDestinationId: destPune.id,
 
-      vehicleNo: "TS09CZ4321",
-      driverName: "Mahesh Gowda",
-      remarks: "Urgent dispatch",
+        packages: 15,
+        packageUom: "set",
+        contents: "Steel Billets",
 
-      brokerId: 3,
-      createdByUserId: userArvind.id
-    }
-  ],
-  skipDuplicates: true,
-});
+        gstPayableAt: "Destination",
+        netWeight: 1200,
+        grossWeight: 1250,
+        chargeWeight: 1220,
+        weightUom: "mt",
 
+        rate: 180,
+        rateOn: "mt",
+        freightCharges: 219600,
+
+        vehicleNo: "TS09CZ4321",
+        driverName: "Mahesh Gowda",
+        remarks: "Urgent dispatch",
+
+        brokerId: 3,
+        createdByUserId: userArvind.id,
+      },
+    ],
+  });
 
   console.log("Seed 2 completed successfully!");
 }
 
 main()
-  .catch(e => {
+  .catch((e) => {
     console.error("Error in Seed 2:", e);
     process.exit(1);
   })

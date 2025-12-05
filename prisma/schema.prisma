@@ -93,6 +93,21 @@ model FinancialYear {
   // Relations
   consignmentNotes ConsignmentNote[]
 }
+model Destination {
+  id        Int      @id @default(autoincrement())
+  name      String
+  state     String?
+  pincode   String?
+
+  isActive  Boolean  @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  consignmentsFrom ConsignmentNote[] @relation("FromDestination")
+  consignmentsTo   ConsignmentNote[] @relation("ToDestination")
+}
+
 //Output models for Customer, CustomerGroup, Broker, ConsignmentNote
 model Customer {
   id           Int      @id @default(autoincrement())
@@ -196,8 +211,12 @@ model ConsignmentNote {
   consignorId     Int
   consigneeId     Int
 
-  fromLocation    String
-  toLocation      String
+  fromDestinationId Int
+  toDestinationId   Int
+
+  fromDestination Destination @relation("FromDestination", fields: [fromDestinationId], references: [id])
+  toDestination   Destination @relation("ToDestination", fields: [toDestinationId], references: [id])
+
 
   packages        Int
   packageUom      String   // lot, set, bags

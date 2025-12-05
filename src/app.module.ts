@@ -10,8 +10,9 @@ import { CompanyModule } from './company/company.module';
 import { CustomerGroupModule } from './customer-group/customer-group.module';
 import { ConsignmentModule } from './consignment/consignment.module';
 import { LorryOwnerModule } from './lorry-owner/lorry-owner.module';
+import { DestinationModule } from './destination/destination.module';
 @Module({
-  imports: [PrismaModule, AuthModule, ConfigModule.forRoot({ isGlobal: true }), CustomerModule, BrokersModule, CompanyModule, CustomerGroupModule, ConsignmentModule, LorryOwnerModule],
+  imports: [PrismaModule, AuthModule, ConfigModule.forRoot({ isGlobal: true }), CustomerModule, BrokersModule, CompanyModule, CustomerGroupModule, ConsignmentModule, LorryOwnerModule, DestinationModule],
   controllers: [UserController],
 })
 export class AppModule {}
