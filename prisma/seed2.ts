@@ -94,7 +94,7 @@ async function main() {
   });
 
   // -----------------------------
-  // 4. USER COMPANY ROLES
+  // 4. USERS
   // -----------------------------
   const userShiven = await prisma.user.findUnique({ where: { username: "shiven" } });
   const userArvind = await prisma.user.findUnique({ where: { username: "arvind" } });
@@ -105,9 +105,9 @@ async function main() {
 
   await prisma.userCompany.createMany({
     data: [
-      { id: 1, userId: userShiven.id, companyId: companyA.id, role: "admin" },
-      { id: 2, userId: userShiven.id, companyId: companyB.id, role: "manager" },
-      { id: 3, userId: userArvind.id, companyId: companyA.id, role: "viewer" },
+      { userId: userShiven.id, companyId: companyA.id, role: "admin" },
+      { userId: userShiven.id, companyId: companyB.id, role: "manager" },
+      { userId: userArvind.id, companyId: companyA.id, role: "viewer" },
     ],
     skipDuplicates: true,
   });
@@ -215,7 +215,7 @@ async function main() {
   });
 
   // -----------------------------
-  // 8. DESTINATIONS (NEW)
+  // 8. DESTINATIONS
   // -----------------------------
   const destPune = await prisma.destination.create({
     data: { name: "Pune", state: "MH", pincode: "411001" },
@@ -230,115 +230,107 @@ async function main() {
   });
 
   // -----------------------------
-  // 9. CONSIGNMENT NOTES (Updated)
+  // 9. LORRY OWNERS (NEW)
   // -----------------------------
-  await prisma.consignmentNote.createMany({
-    data: [
-      {
-        cnNumber: "1001",
-        date: new Date("2024-04-10"),
-        financialYearId: fyA2024.id,
-        companyId: companyA.id,
-        branchId: branchA1.id,
+  const ownerA = await prisma.lorryOwner.create({
+    data: {
+      name: "Raj Transport",
+      address1: "Mumbai Highway",
+      panNumber: "ABCDE1234F",
+      companyId: companyA.id,
+    },
+  });
 
-        consignorId: 1,
-        consigneeId: 2,
+  const ownerB = await prisma.lorryOwner.create({
+    data: {
+      name: "Sai Logistics",
+      address1: "Hyderabad Ring Road",
+      panNumber: "PQRSZ9876K",
+      companyId: companyB.id,
+    },
+  });
 
-        fromDestinationId: destPune.id,
-        toDestinationId: destMumbai.id,
+  // -----------------------------
+  // 10. CONSIGNMENT NOTES
+  // -----------------------------
+  const consignment1 = await prisma.consignmentNote.create({
+    data: {
+      cnNumber: "1001",
+      date: new Date("2024-04-10"),
+      financialYearId: fyA2024.id,
+      companyId: companyA.id,
+      branchId: branchA1.id,
+      consignorId: 1,
+      consigneeId: 2,
+      fromDestinationId: destPune.id,
+      toDestinationId: destMumbai.id,
+      packages: 12,
+      packageUom: "bags",
+      contents: "Steel Rods",
+      gstPayableAt: "Destination",
+      netWeight: 950,
+      grossWeight: 1000,
+      chargeWeight: 980,
+      weightUom: "mt",
+      rate: 150,
+      rateOn: "mt",
+      freightCharges: 147000,
+      vehicleNo: "MH12AB1234",
+      driverName: "Ramesh Kumar",
+      remarks: "Handle with care",
+      brokerId: 1,
+      createdByUserId: userShiven.id,
+    },
+  });
 
-        packages: 12,
-        packageUom: "bags",
-        contents: "Steel Rods",
+  // -----------------------------
+  // 11. LORRY HIRE CHALLAN (NEW)
+  // -----------------------------
+  const challan1 = await prisma.lorryHireChallan.create({
+    data: {
+      challanNumber: "LHC-5001",
+      challanDate: new Date("2024-04-11"),
+      lorryHireDate: new Date("2024-04-12"),
+      vehicleNo: "MH12AB1234",
+      slipNo: "SL-234",
+      remarks: "Delivery on time",
 
-        gstPayableAt: "Destination",
-        netWeight: 950,
-        grossWeight: 1000,
-        chargeWeight: 980,
-        weightUom: "mt",
+      lorryOwnerId: ownerA.id,
+      brokerId: 1,
+      destinationId: destMumbai.id,
 
-        rate: 150,
-        rateOn: "mt",
-        freightCharges: 147000,
+      totalPackages: 12,
+      totalWeight: 980,
+      rate: 150,
+      lorryHire: 147000,
+      advancePaid: 20000,
+      balancePayable: 127000,
 
-        vehicleNo: "MH12AB1234",
-        driverName: "Ramesh Kumar",
-        remarks: "Handle with care",
+      loadingCharges: 500,
+      unloadingCharges: 400,
+      dieselAdvance: 3000,
 
-        brokerId: 1,
-        createdByUserId: userShiven.id,
-      },
+      gstApplicable: true,
+      gstAmount: 5000,
 
-      {
-        cnNumber: "1002",
-        date: new Date("2024-05-02"),
-        financialYearId: fyA2024.id,
-        companyId: companyA.id,
-        branchId: branchA2.id,
+      isSettled: false,
 
-        consignorId: 2,
-        consigneeId: 1,
+      companyId: companyA.id,
+      branchId: branchA1.id,
+      financialYearId: fyA2024.id,
 
-        fromDestinationId: destMumbai.id,
-        toDestinationId: destPune.id,
+      createdByUserId: userShiven.id,
+    },
+  });
 
-        packages: 8,
-        packageUom: "lot",
-        contents: "Scrap Metal",
-
-        gstPayableAt: "Origin",
-        netWeight: 500,
-        grossWeight: 540,
-        chargeWeight: 520,
-        weightUom: "mt",
-
-        rate: 200,
-        rateOn: "fixed",
-        freightCharges: 200,
-
-        vehicleNo: "MH14XY9876",
-        driverName: "Suresh Patil",
-        remarks: "",
-
-        brokerId: 2,
-        createdByUserId: userShiven.id,
-      },
-
-      {
-        cnNumber: "2001",
-        date: new Date("2024-04-15"),
-        financialYearId: fyB2024.id,
-        companyId: companyB.id,
-        branchId: branchB1.id,
-
-        consignorId: 3,
-        consigneeId: 1,
-
-        fromDestinationId: destHyd.id,
-        toDestinationId: destPune.id,
-
-        packages: 15,
-        packageUom: "set",
-        contents: "Steel Billets",
-
-        gstPayableAt: "Destination",
-        netWeight: 1200,
-        grossWeight: 1250,
-        chargeWeight: 1220,
-        weightUom: "mt",
-
-        rate: 180,
-        rateOn: "mt",
-        freightCharges: 219600,
-
-        vehicleNo: "TS09CZ4321",
-        driverName: "Mahesh Gowda",
-        remarks: "Urgent dispatch",
-
-        brokerId: 3,
-        createdByUserId: userArvind.id,
-      },
-    ],
+  // -----------------------------
+  // 12. LORRY HIRE → CONSIGNMENT LINK
+  // -----------------------------
+  await prisma.lorryHireChallanConsignment.create({
+    data: {
+      challanId: challan1.id,
+      consignmentId: consignment1.id,
+    },
   });
 
   console.log("Seed 2 completed successfully!");
