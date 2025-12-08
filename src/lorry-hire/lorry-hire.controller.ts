@@ -4,6 +4,10 @@ import { CreateLorryHireDto } from './dto/create-lorry-hire.dto';
 import { UpdateLorryHireDto } from './dto/update-lorry-hire.dto';
 import { AddConsignmentsDto } from './dto/add-consignments.dto';
 import { SearchLorryHireDto } from './dto/search-lorry-hire.dto';
+import { UseGuards } from '@nestjs/common';
+import { JwtGuard } from 'src/common/guard';
+
+@UseGuards(JwtGuard)
 
 @Controller('lorry-hire')
 export class LorryHireController {

@@ -13,6 +13,10 @@ import { CustomerGroupService } from './customer-group.service';
 import { CreateCustomerGroupDto } from './dto/create-customer-groupt.dto';
 import { UpdateCustomerGroupDto } from './dto/update-customer-group.dto';
 import { AddCustomersDto } from './dto/add-customer.dto';
+import { UseGuards } from '@nestjs/common';
+import { JwtGuard } from 'src/common/guard';
+
+@UseGuards(JwtGuard)
 
 @Controller('customer-groups')
 export class CustomerGroupController {

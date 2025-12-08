@@ -1,6 +1,10 @@
 import { Controller, Post, Body, Get, Param } from "@nestjs/common";
 import { InvoiceService } from "./invoice.service";
 import { CreateInvoiceDto } from "./dto/create-invoice.dto";
+import { UseGuards } from '@nestjs/common';
+import { JwtGuard } from 'src/common/guard';
+
+@UseGuards(JwtGuard)
 
 @Controller("invoices")
 export class InvoiceController {

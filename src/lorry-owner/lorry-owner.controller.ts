@@ -2,6 +2,10 @@ import { Controller, Post, Body, Get, Param, Patch, Delete, Query } from '@nestj
 import { LorryOwnerService } from './lorry-owner.service';
 import { CreateLorryOwnerDto } from './dto/create-lorry-owner.dto';
 import { UpdateLorryOwnerDto } from './dto/update-lorry-owner.dto';
+import { UseGuards } from '@nestjs/common';
+import { JwtGuard } from 'src/common/guard';
+
+@UseGuards(JwtGuard)
 
 @Controller('lorry-owners')
 export class LorryOwnerController {

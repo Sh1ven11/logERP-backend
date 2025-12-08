@@ -3,6 +3,10 @@ import { DestinationService } from './destination.service';
 import { CreateDestinationDto } from './dto/create-destination.dto';
 import { SearchDestinationDto } from './dto/search-destination.dto';
 import { UpdateDestinationDto } from './dto/update-destination.dto';
+import { UseGuards } from '@nestjs/common';
+import { JwtGuard } from 'src/common/guard';
+
+@UseGuards(JwtGuard)
 
 @Controller('destinations')
 export class DestinationController {

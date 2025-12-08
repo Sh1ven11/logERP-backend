@@ -3,6 +3,10 @@ import { ConsignmentService } from './consignment.service';
 import { CreateConsignmentDto } from './dto/create-consignment.dto';
 import { UpdateConsignmentDto } from './dto/update-consignment.dto';
 import { SearchConsignmentDto } from './dto/search-consignment.dto';
+import { UseGuards } from '@nestjs/common';
+import { JwtGuard } from 'src/common/guard';
+
+@UseGuards(JwtGuard)
 
 @Controller('consignments')
 export class ConsignmentController {
