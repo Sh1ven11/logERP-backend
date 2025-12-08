@@ -58,6 +58,7 @@ model Company {
   brokers           Broker[]
   customerGroups    CustomerGroup[]
   lorryOwners       LorryOwner[]
+  invoices Invoice[]
 
   // ⭐ ADDED
   lorryHireChallans LorryHireChallan[]
@@ -78,6 +79,8 @@ model Branch {
   consignmentNotes ConsignmentNote[]
   customers        Customer[]
   brokers          Broker[]
+  invoices Invoice[]
+
 
   // ⭐ ADDED
   lorryHireChallans LorryHireChallan[]
@@ -145,6 +148,7 @@ model Customer {
 
   company   Company @relation(fields: [companyId], references: [id])
   branch    Branch? @relation(fields: [branchId], references: [id])
+  invoices Invoice[]
 
   consignmentsAsConsignor  ConsignmentNote[] @relation("ConsignorRelation")
   consignmentsAsConsignee  ConsignmentNote[] @relation("ConsigneeRelation")
@@ -260,6 +264,8 @@ model ConsignmentNote {
 
   // ⭐ ADDED
   lorryHireChallanConsignments LorryHireChallanConsignment[]
+  invoiceConsignments InvoiceConsignment[]
+
 }
 
 model LorryHireChallan {
@@ -330,4 +336,55 @@ model LorryHireChallanConsignment {
   consignment   ConsignmentNote  @relation(fields: [consignmentId], references: [id])
 
   @@unique([challanId, consignmentId])
+}
+model Invoice {
+  id              Int      @id @default(autoincrement())
+  invoiceNo       Int
+  invoiceDate     DateTime @default(now())
+  
+  companyId       Int
+  branchId        Int
+  customerId      Int
+
+  billAmount      Float    @default(0)
+  balanceAmount   Float    @default(0)
+  deduction       Float    @default(0)
+  tdsDeducted     Float    @default(0)
+  creditDays      Int?
+
+  stagingChargeRate Float?    // st_rate
+  stagingChargeAmount Float?  // st_amount
+  csRate           Float?     @default(0)
+  
+  insurance        Float? @default(0)
+  otherCharges     Float? @default(0)
+
+  gstPercent       Float?
+  gstAmount        Float?
+
+  finalAmount      Float? @default(0)
+
+  remarks          String?
+  notes            String?
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // RELATIONS
+  company      Company   @relation(fields: [companyId], references: [id])
+  branch       Branch    @relation(fields: [branchId], references: [id])
+  customer     Customer  @relation(fields: [customerId], references: [id])
+  consignments InvoiceConsignment[]
+
+}
+
+model InvoiceConsignment {
+  id            Int  @id @default(autoincrement())
+  invoiceId     Int
+  consignmentId Int
+
+  invoice       Invoice         @relation(fields: [invoiceId], references: [id])
+  consignment   ConsignmentNote @relation(fields: [consignmentId], references: [id])
+
+  @@unique([invoiceId, consignmentId])
 }

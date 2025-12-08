@@ -332,6 +332,52 @@ async function main() {
       consignmentId: consignment1.id,
     },
   });
+    // -----------------------------
+  // 13. INVOICE (NEW)
+  // -----------------------------
+
+  const invoice1 = await prisma.invoice.create({
+    data: {
+      invoiceNo: 1, // You can auto-increment manually for now
+      invoiceDate: new Date("2024-04-15"),
+
+      companyId: companyA.id,
+      branchId: branchA1.id,
+      customerId: 2, // Jindal Mumbai (consignee for consignment1)
+
+      billAmount: 147000,   // freightCharges from consignment
+      balanceAmount: 147000 - 20000, // example logic
+      deduction: 0,
+      tdsDeducted: 0,
+      creditDays: 30,
+
+      stagingChargeRate: 50,
+      stagingChargeAmount: 500,
+      csRate: 0,
+
+      insurance: 200,
+      otherCharges: 100,
+
+      gstPercent: 18,
+      gstAmount: 147000 * 0.18,
+
+      finalAmount: 147000 + (147000 * 0.18) + 500 + 200 + 100,
+
+      remarks: "Invoice auto-generated from consignment",
+      notes: "Handle with care",
+    },
+  });
+
+  // -----------------------------
+  // 14. INVOICE ↔ CONSIGNMENT LINK
+  // -----------------------------
+  await prisma.invoiceConsignment.create({
+    data: {
+      invoiceId: invoice1.id,
+      consignmentId: consignment1.id,
+    },
+  });
+
 
   console.log("Seed 2 completed successfully!");
 }

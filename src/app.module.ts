@@ -12,8 +12,9 @@ import { ConsignmentModule } from './consignment/consignment.module';
 import { LorryOwnerModule } from './lorry-owner/lorry-owner.module';
 import { DestinationModule } from './destination/destination.module';
 import { LorryHireModule } from './lorry-hire/lorry-hire.module';
+import { InvoiceModule } from './invoice/invoice.module';
 @Module({
-  imports: [PrismaModule, AuthModule, ConfigModule.forRoot({ isGlobal: true }), CustomerModule, BrokersModule, CompanyModule, CustomerGroupModule, ConsignmentModule, LorryOwnerModule, DestinationModule, LorryHireModule],
+  imports: [PrismaModule, AuthModule, ConfigModule.forRoot({ isGlobal: true }), CustomerModule, BrokersModule, CompanyModule, CustomerGroupModule, ConsignmentModule, LorryOwnerModule, DestinationModule, LorryHireModule, InvoiceModule],
   controllers: [UserController],
 })
 export class AppModule {}
