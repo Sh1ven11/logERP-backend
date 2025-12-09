@@ -101,4 +101,10 @@ export class CreateCustomerDto {
   })
   @IsInt()
   companyId: number;
+  @ApiPropertyOptional({
+  example: 1,
+  description: "Branch ID this customer belongs to (optional)",
+  })
+  @IsInt()
+  branchId?: number;
 }
