@@ -180,21 +180,68 @@ export class LorryHireService {
       include: { lorryOwner: true, broker: true, destination: true },
     });
   }
+  // /Users/shivengupta/Desktop/ERP/erp-backend/src/lorry-hire/lorry-hire.service.ts
 
-  // update basic fields (doesn't auto recalc consignments)
-  async update(id: number, dto: UpdateLorryHireDto) {
-    // if marking settled and paymentDate absent we set paymentDate to now
-    const data: any = { ...dto };
-    if (dto.isSettled && !dto.paymentDate) {
-      data.paymentDate = new Date();
+// /Users/shivengupta/Desktop/ERP/erp-backend/src/lorry-hire/lorry-hire.service.ts
+
+// ... (Other imports and class definition)
+
+async update(id: number, dto: UpdateLorryHireDto) {
+  const data: any = { ...dto };
+  
+  // 1. Existing date handling logic
+  if (dto.isSettled && !dto.paymentDate) {
+    data.paymentDate = new Date();
+  }
+  if (dto.challanDate) data.challanDate = new Date(dto.challanDate as any);
+  if (dto.lorryHireDate) data.lorryHireDate = new Date(dto.lorryHireDate as any);
+
+  // --- 2. PRISMA RELATIONSHIP FIXES ---
+
+  // A. Fix for single relation IDs (one-to-one/one-to-many foreign keys)
+  const singleRelationFields = [
+    { idKey: 'lorryOwnerId', relationKey: 'lorryOwner' },
+    { idKey: 'brokerId', relationKey: 'broker' },
+    { idKey: 'destinationId', relationKey: 'destination' },
+    { idKey: 'companyId', relationKey: 'company' },
+    { idKey: 'branchId', relationKey: 'branch' },
+    { idKey: 'financialYearId', relationKey: 'financialYear' },
+    // Add other single relation ID fields here if they exist
+  ];
+
+  singleRelationFields.forEach(({ idKey, relationKey }) => {
+    if (data[idKey]) {
+      // Transform ID into { connect: { id: ID } }
+      data[relationKey] = {
+        connect: {
+          id: data[idKey],
+        },
+      };
+      delete data[idKey];
     }
-    if (dto.challanDate) data.challanDate = new Date(dto.challanDate as any);
-    if (dto.lorryHireDate) data.lorryHireDate = new Date(dto.lorryHireDate as any);
+  });
 
-    await this.prisma.lorryHireChallan.update({ where: { id }, data });
-    return this.findOne(id);
+  // B. Fix for array relation IDs (many-to-many relationship)
+  // FIX for: Unknown argument `consignmentIds`. Did you mean `consignments`?
+  if (data.consignmentIds && Array.isArray(data.consignmentIds)) {
+      // The 'set' operation requires an array of objects: [{ id: ID }, { id: ID }, ...]
+      const consignmentConnects = data.consignmentIds.map((id: number) => ({ id }));
+
+      // Use the relation field 'consignments' with the 'set' operation
+      data.consignments = { 
+          set: consignmentConnects 
+      };
+
+      // Remove the simple ID array field
+      delete data.consignmentIds;
   }
 
+  // --- END PRISMA RELATIONSHIP FIXES ---
+
+  // 3. Execute the update call
+  await this.prisma.lorryHireChallan.update({ where: { id }, data });
+  return this.findOne(id);
+}
   // mark as settled explicitly
   async settle(id: number, paymentDate?: string) {
     const pd = paymentDate ? new Date(paymentDate) : new Date();
