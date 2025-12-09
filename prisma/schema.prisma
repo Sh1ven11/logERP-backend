@@ -285,7 +285,7 @@ model LorryHireChallan {
   broker          Broker?    @relation(fields: [brokerId], references: [id])
 
   panCardUsed     String?
-  tdsApplicable   Boolean @default(false)
+  tdsApplicable   String?
   tdsPercent      Float?
 
   destinationId   Int

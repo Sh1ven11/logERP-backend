@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsOptional, IsNumber, IsBoolean, IsDateString, IsInt, IsArray } from 'class-validator';
+import { IsString, IsOptional, IsNumber, IsBoolean, IsDateString, IsInt, IsArray ,IsIn} from 'class-validator';
 
 export class CreateLorryHireDto {
   @ApiProperty({ example: "LHC-2024-0001", description: "Challan number (unique per company/year or manual)" })
@@ -43,10 +43,11 @@ export class CreateLorryHireDto {
   @IsString()
   panCardUsed?: string;
 
-  @ApiPropertyOptional({ example: true, description: "Whether TDS applies" })
-  @IsOptional()
-  @IsBoolean()
-  tdsApplicable?: boolean;
+    @ApiPropertyOptional({ example: "lorryOwner", enum: ['yes', 'no', 'broker', 'lorryOwner'], description: "Whether TDS applies and to whom" })
+    @IsOptional()
+    @IsString()
+    @IsIn(['yes', 'no', 'broker', 'lorryOwner'])
+  tdsApplicable?: 'yes' | 'no' | 'broker' | 'lorryOwner';
 
   @ApiPropertyOptional({ example: 2, description: "TDS percentage if applicable" })
   @IsOptional()

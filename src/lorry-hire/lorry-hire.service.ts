@@ -28,54 +28,61 @@ export class LorryHireService {
   }
 
   // Create challan; optionally attach consignmentIds
-  async create(dto: CreateLorryHireDto, userId: number) {
-    // If consignmentIds provided, validate and compute totals
-    let totals = { totalPackages: dto.totalPackages || 0, totalWeight: dto.totalWeight || 0 };
-    if (dto.consignmentIds && dto.consignmentIds.length) {
-      totals = await this.computeTotalsForConsignments(dto.consignmentIds);
-    }
+ async create(dto: CreateLorryHireDto, userId: number) {
+  // If consignmentIds provided, validate and compute totals
+  let totals = { totalPackages: dto.totalPackages || 0, totalWeight: dto.totalWeight || 0 };
+  if (dto.consignmentIds && dto.consignmentIds.length) {
+    totals = await this.computeTotalsForConsignments(dto.consignmentIds);
+  }
 
-    // compute tds amount if applicable
-    const tdsAmount = dto.tdsApplicable && dto.tdsPercent && dto.lorryHire
-      ? (dto.lorryHire * dto.tdsPercent) / 100
-      : 0;
+  // 👇 MODIFIED: compute tds amount if applicable (Handles the new string type)
+  const isTdsApplicable = dto.tdsApplicable && dto.tdsApplicable !== 'no';
+  
+  const tdsAmount = isTdsApplicable && dto.tdsPercent && dto.lorryHire
+    ? (dto.lorryHire * dto.tdsPercent) / 100
+    : 0;
+  // 👆 MODIFIED
 
-    const balance = (dto.lorryHire || 0) - (dto.advancePaid || 0) - (tdsAmount || 0)
-      - (dto.loadingCharges || 0) - (dto.unloadingCharges || 0) - (dto.dieselAdvance || 0)
-      + (dto.gstApplicable ? (dto.gstAmount || 0) : 0);
+  const balance = (dto.lorryHire || 0) - (dto.advancePaid || 0) - (tdsAmount || 0)
+    - (dto.loadingCharges || 0) - (dto.unloadingCharges || 0) - (dto.dieselAdvance || 0)
+    + (dto.gstApplicable ? (dto.gstAmount || 0) : 0);
 
-    const created = await this.prisma.lorryHireChallan.create({
-      data: {
-        challanNumber: dto.challanNumber,
-        challanDate: new Date(dto.challanDate),
-        lorryHireDate: dto.lorryHireDate ? new Date(dto.lorryHireDate) : undefined,
-        vehicleNo: dto.vehicleNo,
-        slipNo: dto.slipNo,
-        remarks: dto.remarks,
-        lorryOwnerId: dto.lorryOwnerId,
-        brokerId: dto.brokerId,
-        panCardUsed: dto.panCardUsed,
-        tdsApplicable: dto.tdsApplicable ?? false,
-        tdsPercent: dto.tdsPercent ?? undefined,
-        destinationId: dto.destinationId,
-        totalPackages: totals.totalPackages,
-        totalWeight: totals.totalWeight,
-        rate: dto.rate ?? undefined,
-        lorryHire: dto.lorryHire ?? undefined,
-        advancePaid: dto.advancePaid ?? 0,
-        balancePayable: balance,
-        loadingCharges: dto.loadingCharges ?? 0,
-        unloadingCharges: dto.unloadingCharges ?? 0,
-        dieselAdvance: dto.dieselAdvance ?? 0,
-        gstApplicable: dto.gstApplicable ?? false,
-        gstAmount: dto.gstAmount ?? 0,
-        companyId: dto.companyId,
-        branchId: dto.branchId,
-        financialYearId: dto.financialYearId,
-        consignmentCount: dto.consignmentIds?.length ?? 0,
-        createdByUserId: userId,
-      },
-    });
+  const created = await this.prisma.lorryHireChallan.create({
+    data: {
+      challanNumber: dto.challanNumber,
+      challanDate: new Date(dto.challanDate),
+      lorryHireDate: dto.lorryHireDate ? new Date(dto.lorryHireDate) : undefined,
+      vehicleNo: dto.vehicleNo,
+      slipNo: dto.slipNo,
+      remarks: dto.remarks,
+      lorryOwnerId: dto.lorryOwnerId,
+      brokerId: dto.brokerId,
+      panCardUsed: dto.panCardUsed,
+      
+      // 👇 MODIFIED: Store the new string value
+      tdsApplicable: dto.tdsApplicable ?? 'no', // Default to 'no'
+      // 👆 MODIFIED
+      
+      tdsPercent: dto.tdsPercent ?? undefined,
+      destinationId: dto.destinationId,
+      totalPackages: totals.totalPackages,
+      totalWeight: totals.totalWeight,
+      rate: dto.rate ?? undefined,
+      lorryHire: dto.lorryHire ?? undefined,
+      advancePaid: dto.advancePaid ?? 0,
+      balancePayable: balance,
+      loadingCharges: dto.loadingCharges ?? 0,
+      unloadingCharges: dto.unloadingCharges ?? 0,
+      dieselAdvance: dto.dieselAdvance ?? 0,
+      gstApplicable: dto.gstApplicable ?? false,
+      gstAmount: dto.gstAmount ?? 0,
+      companyId: dto.companyId,
+      branchId: dto.branchId,
+      financialYearId: dto.financialYearId,
+      consignmentCount: dto.consignmentIds?.length ?? 0,
+      createdByUserId: userId,
+    },
+  });
 
     // Attach consignments if provided
     if (dto.consignmentIds && dto.consignmentIds.length) {
