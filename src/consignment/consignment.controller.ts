@@ -7,7 +7,6 @@ import { UseGuards } from '@nestjs/common';
 import { JwtGuard } from 'src/common/guard';
 
 @UseGuards(JwtGuard)
-
 @Controller('consignments')
 export class ConsignmentController {
   constructor(private readonly service: ConsignmentService) {}
@@ -25,9 +24,22 @@ export class ConsignmentController {
     return this.service.findAll(Number(companyId), Number(financialYearId));
   }
 
+  // ⭐ FIXED SEARCH ENDPOINT ⭐
   @Get('search')
-  search(@Query() filters: SearchConsignmentDto) {
-    return this.service.search(filters);
+  search(@Query() filters: any) {
+    // Map "query" -> "cnNumber"
+    if (filters.query) {
+      filters.cnNumber = filters.query;
+      delete filters.query;
+    }
+
+    // Ensure numeric fields are cast properly
+    if (filters.companyId) filters.companyId = Number(filters.companyId);
+    if (filters.financialYearId) filters.financialYearId = Number(filters.financialYearId);
+    if (filters.consignorId) filters.consignorId = Number(filters.consignorId);
+    if (filters.consigneeId) filters.consigneeId = Number(filters.consigneeId);
+
+    return this.service.search(filters as SearchConsignmentDto);
   }
 
   @Get(':id')
