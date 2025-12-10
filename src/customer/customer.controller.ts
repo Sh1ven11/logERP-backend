@@ -29,6 +29,7 @@ export class CustomerController {
   getAllCustomers() {
     return this.customerService.getAll();
   }
+  
   @Get('search')
 searchCustomers(
   @Query('name') name?: string,

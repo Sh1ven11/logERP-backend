@@ -7,8 +7,8 @@ export class CreateCustomerDto {
     description: "Unique customer code (from legacy or internal system)",
   })
   @IsString()
-  companyCode: string;
-
+  @IsOptional() // <-- ADD THIS DECORATOR
+  companyCode?: string;
   @ApiProperty({
     example: "Jindal Steel Pune",
     description: "Registered company name of the customer",
