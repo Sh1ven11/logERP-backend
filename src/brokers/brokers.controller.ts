@@ -8,6 +8,7 @@ import {
   Delete,
   ParseIntPipe,
   UseGuards,
+  Query
 } from '@nestjs/common';
 import { BrokersService } from './brokers.service';
 import { CreateBrokerDto } from './dto/create-broker.dto';
@@ -25,10 +26,19 @@ export class BrokersController {
   }
 
   @Get()
-  findAll() {
-    return this.brokersService.findAll();
-  }
-
+  findAll(@Query('companyId') companyId: string) {
+    // FIX: Extract companyId from query and pass it as a number
+    console.log('Received companyId:', companyId);
+    if (!companyId) {
+        // Handle case where companyId is missing (optional: return 400 or empty list)
+        return []; 
+    }
+    
+    // Ensure the ID is converted to a number
+    const companyIdNum = parseInt(companyId, 10);
+    
+    return this.brokersService.findAll(companyIdNum);
+  } 
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.brokersService.findOne(id);

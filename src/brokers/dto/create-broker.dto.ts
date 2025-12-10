@@ -7,6 +7,7 @@ export class CreateBrokerDto {
     description: "Unique broker code from legacy or internal system",
   })
   @IsString()
+  @IsOptional() // <-- MAKE THIS OPTIONAL
   brokerCode: string;
 
   @ApiProperty({
@@ -20,6 +21,7 @@ export class CreateBrokerDto {
     example: "Pune Market Yard",
     description: "Address of the broker",
   })
+  @IsOptional()
   @IsString()
   address: string;
 
