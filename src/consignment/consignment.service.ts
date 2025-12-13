@@ -8,126 +8,159 @@ import { SearchConsignmentDto } from './dto/search-consignment.dto';
 export class ConsignmentService {
   constructor(private prisma: PrismaService) {}
 
-  // Get FY based on date + company
-  async getFinancialYearId(date: Date, companyId: number) {
+  // -------------------------------------------------------------------------
+  // CREATE
+  // -------------------------------------------------------------------------
+  async create(dto: CreateConsignmentDto, userId: number) {
+    // 1. Validate financialYearId belongs to the company
     const fy = await this.prisma.financialYear.findFirst({
       where: {
-        companyId,
-        startDate: { lte: date },
-        endDate: { gte: date },
+        id: dto.financialYearId,
+        companyId: dto.companyId,
       },
     });
 
-    if (!fy) throw new BadRequestException("Financial year not defined for this date");
+    if (!fy) {
+      throw new BadRequestException("Invalid financial year for this company");
+    }
 
-    return fy.id;
-  }
-
-  // Create CN
-  async create(dto: CreateConsignmentDto, userId: number) {
-    // Ensure date field is handled as a Date object for lookup
-    const date = new Date(dto.date); 
-    const financialYearId = await this.getFinancialYearId(date, dto.companyId);
-
-    // ensure CN number unique within company + FY
-    const exists = await this.prisma.consignmentNote.findFirst({
+    // 2. Ensure CN number is unique in company + FY
+    const duplicate = await this.prisma.consignmentNote.findFirst({
       where: {
         cnNumber: dto.cnNumber,
         companyId: dto.companyId,
-        financialYearId,
+        financialYearId: dto.financialYearId,
       },
     });
 
-    if (exists) {
-      throw new BadRequestException("Consignment number already exists in this financial year");
+    if (duplicate) {
+      throw new BadRequestException(
+        "Consignment number already exists in this financial year"
+      );
     }
 
+    // 3. Create CN
     return this.prisma.consignmentNote.create({
       data: {
         ...dto,
-        date,
-        financialYearId,
+        date: new Date(dto.date),
         createdByUserId: userId,
       },
     });
   }
 
-  // Get all CN by company + FY
+
+  // -------------------------------------------------------------------------
+  // LIST ALL (company + FY)
+  // -------------------------------------------------------------------------
   async findAll(companyId: number, financialYearId: number) {
     return this.prisma.consignmentNote.findMany({
       where: { companyId, financialYearId },
       orderBy: { date: 'desc' },
+      include: {
+        consignor: { select: { id: true, companyName: true } },
+        consignee: { select: { id: true, companyName: true } },
+        fromDestination: { select: { id: true, name: true } },
+        toDestination: { select: { id: true, name: true } },
+        broker: { select: { id: true, name: true } },
+      },
     });
   }
 
-  // Search CNs
+
+  // -------------------------------------------------------------------------
+  // SEARCH
+  // -------------------------------------------------------------------------
   async search(filters: SearchConsignmentDto) {
-    // Note: The logic here assumes that companyId, branchId, and financialYearId
-    // are mandatory for filtering and are provided as numbers (or undefined if optional in the DTO).
     return this.prisma.consignmentNote.findMany({
       where: {
-        cnNumber: filters.cnNumber ? { contains: filters.cnNumber, mode: 'insensitive' } : undefined,
-        vehicleNo: filters.vehicleNo ? { contains: filters.vehicleNo, mode: 'insensitive' } : undefined,
+        cnNumber: filters.cnNumber
+          ? { contains: filters.cnNumber, mode: "insensitive" }
+          : undefined,
+
+        vehicleNo: filters.vehicleNo
+          ? { contains: filters.vehicleNo, mode: "insensitive" }
+          : undefined,
+
         consignorId: filters.consignorId || undefined,
         consigneeId: filters.consigneeId || undefined,
         companyId: filters.companyId || undefined,
         branchId: filters.branchId || undefined,
         financialYearId: filters.financialYearId || undefined,
       },
-      orderBy: { date: 'desc' },
+
+      orderBy: { date: "desc" },
+
+      include: {
+        consignor: { select: { id: true, companyName: true } },
+        consignee: { select: { id: true, companyName: true } },
+        fromDestination: { select: { id: true, name: true } },
+        toDestination: { select: { id: true, name: true } },
+        broker: { select: { id: true, name: true } },
+      },
     });
   }
 
-  // One CN
+
+  // -------------------------------------------------------------------------
+  // FIND ONE (for edit page)
+  // -------------------------------------------------------------------------
   async findOne(id: number) {
-    // Added a check to ensure the record exists (good practice)
-    const consignment = await this.prisma.consignmentNote.findUnique({ where: { id } });
-    if (!consignment) {
-        throw new NotFoundException(`Consignment with ID ${id} not found.`);
+  const consignment = await this.prisma.consignmentNote.findUnique({
+    where: { id },
+    include: {
+      consignor: { select: { id: true, companyName: true } },
+      consignee: { select: { id: true, companyName: true } },
+      fromDestination: { select: { id: true, name: true } },
+      toDestination: { select: { id: true, name: true } },
+      broker: { select: { id: true, name: true } },
     }
-    return consignment;
+  });
+
+  if (!consignment) {
+    throw new NotFoundException(`Consignment with ID ${id} not found.`);
   }
 
-  // FIX: Update CN - Corrected typo and ensured date conversion
+  return consignment;
+}
+
+
+  // -------------------------------------------------------------------------
+  // UPDATE
+  // -------------------------------------------------------------------------
   async update(id: number, dto: UpdateConsignmentDto) {
-    // 1. Check if the record exists before updating
-    const existingConsignment = await this.prisma.consignmentNote.findUnique({ where: { id } });
-    if (!existingConsignment) {
-        throw new NotFoundException(`Consignment with ID ${id} not found.`);
+    const existing = await this.prisma.consignmentNote.findUnique({
+      where: { id },
+    });
+
+    if (!existing) {
+      throw new NotFoundException(`Consignment with ID ${id} not found.`);
     }
 
-    // 2. Prepare data, converting the date string to a Date object only if it is provided
-    const dataToUpdate: any = { ...dto }; // Use 'any' temporarily for easier property manipulation
+    // prepare update payload
+    const dataToUpdate: any = { ...dto };
 
     if (dto.date) {
-        // FIX: Renamed 'ddate' back to 'date' and converted it
-        dataToUpdate.date = new Date(dto.date);
-    } else {
-        // If date is undefined, remove it from the payload entirely if the DTO is not strict
-        delete dataToUpdate.date; 
-    }
-    
-    // We must ensure that the user does not try to change the CN number to one that already exists 
-    // in the same company and FY, if the CN number is included in the DTO.
-    if (dto.cnNumber && dto.cnNumber !== existingConsignment.cnNumber) {
-        // Recalculate financialYearId for consistency, although generally not needed on update
-        const date = dataToUpdate.date || existingConsignment.date;
-        const financialYearId = await this.getFinancialYearId(date, dto.companyId || existingConsignment.companyId);
-
-        const exists = await this.prisma.consignmentNote.findFirst({
-            where: {
-                cnNumber: dto.cnNumber,
-                companyId: dto.companyId || existingConsignment.companyId,
-                financialYearId,
-                NOT: { id: id } // Exclude the current record itself
-            },
-        });
-
-        if (exists) {
-            throw new BadRequestException("Consignment number already exists in this financial year.");
-        }
+      dataToUpdate.date = new Date(dto.date);
     }
 
+    // Prevent duplicate CN number (ONLY if CN number changed)
+    if (dto.cnNumber && dto.cnNumber !== existing.cnNumber) {
+      const duplicate = await this.prisma.consignmentNote.findFirst({
+        where: {
+          cnNumber: dto.cnNumber,
+          companyId: dto.companyId ?? existing.companyId,
+          financialYearId: dto.financialYearId ?? existing.financialYearId,
+          NOT: { id }, // exclude current CN
+        },
+      });
+
+      if (duplicate) {
+        throw new BadRequestException(
+          "Consignment number already exists in this financial year."
+        );
+      }
+    }
 
     return this.prisma.consignmentNote.update({
       where: { id },
@@ -135,13 +168,21 @@ export class ConsignmentService {
     });
   }
 
-  // Delete CN
+
+  // -------------------------------------------------------------------------
+  // DELETE
+  // -------------------------------------------------------------------------
   async remove(id: number) {
-    // Added a check to ensure the record exists before deleting
-    const exists = await this.prisma.consignmentNote.findUnique({ where: { id } });
+    const exists = await this.prisma.consignmentNote.findUnique({
+      where: { id },
+    });
+
     if (!exists) {
-        throw new NotFoundException(`Consignment with ID ${id} not found.`);
+      throw new NotFoundException(`Consignment with ID ${id} not found.`);
     }
-    return this.prisma.consignmentNote.delete({ where: { id } });
+
+    return this.prisma.consignmentNote.delete({
+      where: { id },
+    });
   }
 }

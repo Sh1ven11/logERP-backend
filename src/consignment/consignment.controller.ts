@@ -13,6 +13,11 @@ export class ConsignmentController {
 
   @Post()
   create(@Req() req, @Body() dto: CreateConsignmentDto) {
+    // force numbers (protect against React sending strings)
+    dto.companyId = Number(dto.companyId);
+    dto.financialYearId = Number(dto.financialYearId);
+    dto.branchId = Number(dto.branchId);
+
     return this.service.create(dto, req.user.id);
   }
 
@@ -24,16 +29,15 @@ export class ConsignmentController {
     return this.service.findAll(Number(companyId), Number(financialYearId));
   }
 
-  // ⭐ FIXED SEARCH ENDPOINT ⭐
   @Get('search')
   search(@Query() filters: any) {
-    // Map "query" -> "cnNumber"
+    // Map "query" to "cnNumber"
     if (filters.query) {
       filters.cnNumber = filters.query;
       delete filters.query;
     }
 
-    // Ensure numeric fields are cast properly
+    // Ensure numeric conversion
     if (filters.companyId) filters.companyId = Number(filters.companyId);
     if (filters.financialYearId) filters.financialYearId = Number(filters.financialYearId);
     if (filters.consignorId) filters.consignorId = Number(filters.consignorId);
@@ -43,12 +47,24 @@ export class ConsignmentController {
   }
 
   @Get(':id')
-  getOne(@Param('id') id: string) {
-    return this.service.findOne(Number(id));
-  }
+async getOne(@Param('id') id: string) {
+  const data = await this.service.findOne(Number(id));
+  console.log("RETURNING CN:", data);
+  return data;
+}
+
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() dto: UpdateConsignmentDto) {
+    // convert IDs if present
+    if (dto.companyId) dto.companyId = Number(dto.companyId);
+    if (dto.financialYearId) dto.financialYearId = Number(dto.financialYearId);
+    if (dto.consignorId) dto.consignorId = Number(dto.consignorId);
+    if (dto.consigneeId) dto.consigneeId = Number(dto.consigneeId);
+    if (dto.fromDestinationId) dto.fromDestinationId = Number(dto.fromDestinationId);
+    if (dto.toDestinationId) dto.toDestinationId = Number(dto.toDestinationId);
+    if (dto.brokerId) dto.brokerId = Number(dto.brokerId);
+
     return this.service.update(Number(id), dto);
   }
 

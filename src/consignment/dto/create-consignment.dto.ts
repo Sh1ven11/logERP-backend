@@ -1,4 +1,4 @@
-import { IsString, IsNumber, IsOptional, IsDateString } from 'class-validator';
+import { IsString, IsNumber, IsOptional, IsDateString ,IsInt} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateConsignmentDto {
@@ -8,6 +8,10 @@ export class CreateConsignmentDto {
   })
   @IsString()
   cnNumber: string;
+
+  @ApiProperty({ example: 1, description: "Financial year id" })
+  @IsInt()
+  financialYearId: number;
 
   @ApiProperty({
     example: "2024-04-12",
@@ -58,6 +62,7 @@ export class CreateConsignmentDto {
   @IsNumber()
   toDestinationId: number;
 
+  @IsOptional()
   @ApiProperty({
     example: 12,
     description: "Number of packages",
@@ -65,6 +70,7 @@ export class CreateConsignmentDto {
   @IsNumber()
   packages: number;
 
+  @IsOptional()
   @ApiProperty({
     example: "bags",
     description: "Unit of measurement for packages (e.g., bags, lot, set)",
@@ -72,6 +78,7 @@ export class CreateConsignmentDto {
   @IsString()
   packageUom: string;
 
+  @IsOptional()
   @ApiProperty({
     example: "Steel rods (Grade A)",
     description: "Description of goods being consigned",
@@ -111,6 +118,7 @@ export class CreateConsignmentDto {
   @IsNumber()
   chargeWeight?: number;
 
+  @IsOptional()
   @ApiProperty({
     example: "mt",
     description: "Weight UOM (e.g., mt, fixed)",
