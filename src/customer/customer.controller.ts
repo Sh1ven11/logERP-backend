@@ -26,10 +26,10 @@ export class CustomerController {
   }
 
   @Get()
-  getAllCustomers() {
-    return this.customerService.getAll();
-  }
-  
+getAllCustomers(@Query('companyId') companyId?: string) {
+  // Pass the optional companyId to the service
+  return this.customerService.getAll(companyId); 
+}
   @Get('search')
 searchCustomers(
   @Query('name') name?: string,

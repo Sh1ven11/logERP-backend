@@ -39,8 +39,15 @@ export class CustomerService {
     return this.prisma.customer.delete({ where: { id } });
   }
 
-  getAll() {
-    return this.prisma.customer.findMany();
+  getAll(companyId?: string) {
+    // Convert companyId string to number for Prisma's filter, if it exists.
+    const whereClause = companyId
+      ? { companyId: Number(companyId) } // <-- String to number conversion here
+      : {};
+
+    return this.prisma.customer.findMany({
+      where: whereClause,
+    });
   }
 
   async search(filters: {

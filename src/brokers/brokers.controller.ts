@@ -38,11 +38,25 @@ export class BrokersController {
     const companyIdNum = parseInt(companyId, 10);
     
     return this.brokersService.findAll(companyIdNum);
-  } 
+  } @Get('search')
+searchByName(
+  @Query('companyId') companyId: string,
+  @Query('query') query: string,
+) {
+  if (!companyId || !query) {
+    return [];
+  }
+
+  const companyIdNum = parseInt(companyId, 10);
+  return this.brokersService.findByName(companyIdNum, query);
+}
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.brokersService.findOne(id);
   }
+  // brokers.controller.ts
+
+
 
   @Put(':id')
   update(

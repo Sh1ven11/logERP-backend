@@ -99,4 +99,26 @@ async findAll(companyId: number) {
 
     return this.prisma.broker.delete({ where: { id } });
   }
+  // brokers.service.ts
+
+async findByName(companyId: number, query: string) {
+  if (!query || query.trim().length < 2) {
+    return [];
+  }
+
+  return this.prisma.broker.findMany({
+    where: {
+      companyId: companyId,
+      name: {
+        contains: query,
+        mode: 'insensitive', // IMPORTANT for autocomplete
+      },
+    },
+    orderBy: {
+      name: 'asc',
+    },
+    take: 20, // limit results for performance
+  });
+}
+
 }

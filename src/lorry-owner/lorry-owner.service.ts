@@ -23,6 +23,25 @@ export class LorryOwnerService {
     if (!item) throw new NotFoundException('Lorry owner not found');
     return item;
   }
+  async findByName(companyId: number, query: string) {
+  if (!query || query.trim().length < 2) {
+    return [];
+  }
+
+  return this.prisma.lorryOwner.findMany({
+    where: {
+      companyId,
+      name: {
+        contains: query,
+        mode: 'insensitive', // VERY IMPORTANT
+      },
+    },
+    orderBy: {
+      name: 'asc',
+    },
+    take: 20, // limit for autocomplete
+  });
+}
 
   update(id: number, dto: UpdateLorryOwnerDto) {
     return this.prisma.lorryOwner.update({
