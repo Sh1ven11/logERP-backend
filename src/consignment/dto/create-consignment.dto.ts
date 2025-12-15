@@ -1,17 +1,23 @@
-import { IsString, IsNumber, IsOptional, IsDateString ,IsInt} from 'class-validator';
+import {
+  IsString,
+  IsNumber,
+  IsOptional,
+  IsDateString,
+  IsInt,
+} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateConsignmentDto {
+  // -------------------------
+  // CORE IDENTIFIERS
+  // -------------------------
+
   @ApiProperty({
     example: "1001",
-    description: "Pre-printed consignment note number (unique within company + financial year)",
+    description: "Pre-printed consignment note number (unique per company + financial year)",
   })
   @IsString()
   cnNumber: string;
-
-  @ApiProperty({ example: 1, description: "Financial year id" })
-  @IsInt()
-  financialYearId: number;
 
   @ApiProperty({
     example: "2024-04-12",
@@ -20,165 +26,119 @@ export class CreateConsignmentDto {
   @IsDateString()
   date: string;
 
-  @ApiProperty({
-    example: 1,
-    description: "Company to which the consignment belongs",
-  })
-  @IsNumber()
+  @ApiProperty({ example: 1 })
+  @IsInt()
   companyId: number;
 
-  @ApiProperty({
-    example: 2,
-    description: "Branch handling this consignment",
-  })
-  @IsNumber()
+  @ApiProperty({ example: 1 })
+  @IsInt()
   branchId: number;
+
+  @ApiProperty({ example: 1 })
+  @IsInt()
+  financialYearId: number;
+
+  // -------------------------
+  // PARTIES
+  // -------------------------
 
   @ApiProperty({
     example: 5,
     description: "Customer ID of consignor (sender)",
   })
-  @IsNumber()
+  @IsInt()
   consignorId: number;
 
   @ApiProperty({
     example: 6,
     description: "Customer ID of consignee (receiver)",
   })
-  @IsNumber()
+  @IsInt()
   consigneeId: number;
 
   @ApiProperty({
-    example: 3,
-    description: "Origin destination ID",
+    example: 6,
+    description: "Customer ID who will be billed (defaults to consignee)",
   })
-  @IsNumber()
+  @IsInt()
+  billedToId: number;
+
+  // -------------------------
+  // ROUTE
+  // -------------------------
+
+  @ApiProperty({ example: 3 })
+  @IsInt()
   fromDestinationId: number;
 
-  @ApiProperty({
-    example: 4,
-    description: "Destination ID where goods are delivered",
-  })
-  @IsNumber()
+  @ApiProperty({ example: 4 })
+  @IsInt()
   toDestinationId: number;
 
-  @IsOptional()
-  @ApiProperty({
-    example: 12,
-    description: "Number of packages",
-  })
-  @IsNumber()
-  packages: number;
+  // -------------------------
+  // CARGO
+  // -------------------------
 
+  @ApiPropertyOptional({ example: 12 })
   @IsOptional()
-  @ApiProperty({
-    example: "bags",
-    description: "Unit of measurement for packages (e.g., bags, lot, set)",
-  })
+  @IsInt()
+  packages?: number;
+
+  @ApiPropertyOptional({ example: "bags" })
+  @IsOptional()
   @IsString()
-  packageUom: string;
+  packageUom?: string;
 
+  @ApiPropertyOptional({ example: "Steel rods (Grade A)" })
   @IsOptional()
-  @ApiProperty({
-    example: "Steel rods (Grade A)",
-    description: "Description of goods being consigned",
-  })
   @IsString()
-  contents: string;
+  contents?: string;
 
-  @ApiPropertyOptional({
-    example: "Destination",
-    description: "GST payable at (Origin / Destination)",
-  })
+  // -------------------------
+  // WEIGHT & RATE
+  // -------------------------
+
+  @ApiPropertyOptional({ example: "Destination" })
   @IsOptional()
   @IsString()
   gstPayableAt?: string;
 
-  @ApiPropertyOptional({
-    example: 950,
-    description: "Net weight of goods",
-  })
+  @ApiPropertyOptional({ example: 950 })
   @IsOptional()
   @IsNumber()
   netWeight?: number;
 
-  @ApiPropertyOptional({
-    example: 1000,
-    description: "Gross weight of goods",
-  })
+  @ApiPropertyOptional({ example: 1000 })
   @IsOptional()
   @IsNumber()
   grossWeight?: number;
 
-  @ApiPropertyOptional({
-    example: 980,
-    description: "Chargeable weight",
-  })
+  @ApiPropertyOptional({ example: 980 })
   @IsOptional()
   @IsNumber()
   chargeWeight?: number;
 
+  @ApiPropertyOptional({ example: "mt" })
   @IsOptional()
-  @ApiProperty({
-    example: "mt",
-    description: "Weight UOM (e.g., mt, fixed)",
-  })
   @IsString()
-  weightUom: string;
+  weightUom?: string;
 
-  @ApiPropertyOptional({
-    example: 150,
-    description: "Rate value based on rateOn",
-  })
+  @ApiPropertyOptional({ example: 150 })
   @IsOptional()
   @IsNumber()
   rate?: number;
 
-  @ApiPropertyOptional({
-    example: "mt",
-    description: "Rate is applied on (e.g., mt, fixed)",
-  })
+  @ApiPropertyOptional({ example: "mt" })
   @IsOptional()
   @IsString()
   rateOn?: string;
 
-  @ApiPropertyOptional({
-    example: 147000,
-    description: "Freight charges computed for this consignment",
-  })
-  @IsOptional()
-  @IsNumber()
-  freightCharges?: number;
+  // -------------------------
+  // MISC
+  // -------------------------
 
-  @ApiPropertyOptional({
-    example: "MH12AB1234",
-    description: "Vehicle number used for transport",
-  })
-  @IsOptional()
-  @IsString()
-  vehicleNo?: string;
-
-  @ApiPropertyOptional({
-    example: "Ramesh Kumar",
-    description: "Driver name",
-  })
-  @IsOptional()
-  @IsString()
-  driverName?: string;
-
-  @ApiPropertyOptional({
-    example: "Handle with care",
-    description: "Additional remarks or instructions",
-  })
+  @ApiPropertyOptional({ example: "Handle with care" })
   @IsOptional()
   @IsString()
   remarks?: string;
-
-  @ApiPropertyOptional({
-    example: 7,
-    description: "Broker ID involved in this consignment",
-  })
-  @IsOptional()
-  @IsNumber()
-  brokerId?: number;
 }

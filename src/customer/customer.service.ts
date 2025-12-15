@@ -35,7 +35,7 @@ export class CustomerService {
   async delete(id: number) {
     const exists = await this.prisma.customer.findUnique({ where: { id } });
     if (!exists) throw new NotFoundException('Customer not found');
-
+    console.log('Deleting customer with id:', id);
     return this.prisma.customer.delete({ where: { id } });
   }
 

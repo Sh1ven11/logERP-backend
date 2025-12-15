@@ -149,7 +149,7 @@ model Customer {
   company   Company @relation(fields: [companyId], references: [id])
   branch    Branch? @relation(fields: [branchId], references: [id])
   invoices Invoice[]
-
+  billedConsignments  ConsignmentNote[] @relation("BilledTo")
   consignmentsAsConsignor  ConsignmentNote[] @relation("ConsignorRelation")
   consignmentsAsConsignee  ConsignmentNote[] @relation("ConsigneeRelation")
 }
@@ -182,7 +182,7 @@ model Broker {
   company  Company @relation(fields: [companyId], references: [id])
   branch   Branch? @relation(fields: [branchId], references: [id])
 
-  consignmentNotes ConsignmentNote[]
+  //consignmentNotes ConsignmentNote[]
 
   // ⭐ ADDED
   lorryHireChallans LorryHireChallan[]
@@ -230,35 +230,37 @@ model ConsignmentNote {
   fromDestination Destination @relation("FromDestination", fields: [fromDestinationId], references: [id])
   toDestination   Destination @relation("ToDestination", fields: [toDestinationId], references: [id])
 
-  packages        Int
-  packageUom      String
+  packages        Int?
+  packageUom      String?
   contents        String?
 
   gstPayableAt    String?
   netWeight       Float?
   grossWeight     Float?
   chargeWeight    Float?
-  weightUom       String
+  weightUom       String?
 
   rate            Float?
   rateOn          String?
   freightCharges  Float?
 
-  vehicleNo       String?
-  driverName      String?
+  //vehicleNo       String?
+  //driverName      String?
   remarks         String?
 
-  brokerId        Int?
+  //brokerId        Int?
   createdByUserId Int
 
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+  billedToId Int
+  billedTo   Customer @relation("BilledTo", fields: [billedToId], references: [id])
 
   company         Company        @relation(fields: [companyId], references: [id])
   branch          Branch         @relation(fields: [branchId], references: [id])
   consignor       Customer       @relation("ConsignorRelation", fields: [consignorId], references: [id])
   consignee       Customer       @relation("ConsigneeRelation", fields: [consigneeId], references: [id])
-  broker          Broker?        @relation(fields: [brokerId], references: [id])
+  //broker          Broker?        @relation(fields: [brokerId], references: [id])
   financialYear   FinancialYear  @relation(fields: [financialYearId], references: [id])
   createdBy       User           @relation("UserCreatedConsignments", fields: [createdByUserId], references: [id])
 
@@ -270,34 +272,46 @@ model ConsignmentNote {
 
 model LorryHireChallan {
   id              Int      @id @default(autoincrement())
+
   challanNumber   String
   challanDate     DateTime
   lorryHireDate   DateTime?
 
+  // 🚛 Vehicle & Driver
   vehicleNo       String
-  slipNo          String?
+  driverName      String?
+  driverLicenseNo String?
+
   remarks         String?
 
+  // 👤 Parties
   lorryOwnerId    Int
   lorryOwner      LorryOwner @relation(fields: [lorryOwnerId], references: [id])
 
   brokerId        Int?
   broker          Broker?    @relation(fields: [brokerId], references: [id])
+  @@unique([companyId, financialYearId, challanNumber])
 
+  // 🧾 TDS
   panCardUsed     String?
   tdsApplicable   String?
   tdsPercent      Float?
 
+  // 📍 Trip
   destinationId   Int
   destination     Destination @relation(fields: [destinationId], references: [id])
 
+  // 📦 Aggregates
   totalPackages   Int?    @default(0)
   totalWeight     Float?  @default(0)
+
   rate            Float?
   lorryHire       Float?
+
   advancePaid     Float?  @default(0)
   balancePayable  Float?  @default(0)
 
+  // ➕ Charges
   loadingCharges   Float? @default(0)
   unloadingCharges Float? @default(0)
   dieselAdvance    Float? @default(0)
@@ -305,11 +319,13 @@ model LorryHireChallan {
   gstApplicable    Boolean @default(false)
   gstAmount        Float?  @default(0)
 
+  // 💰 Settlement
   isSettled        Boolean @default(false)
   paymentDate      DateTime?
 
   consignmentCount Int?    @default(0)
 
+  // 🔗 Org
   companyId        Int
   branchId         Int
   financialYearId  Int
@@ -320,12 +336,14 @@ model LorryHireChallan {
 
   consignments     LorryHireChallanConsignment[]
 
+  // 👤 Audit
   createdByUserId  Int
   createdBy        User @relation("UserCreatedLorryHireChallan", fields: [createdByUserId], references: [id])
 
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 }
+
 
 model LorryHireChallanConsignment {
   id            Int @id @default(autoincrement())

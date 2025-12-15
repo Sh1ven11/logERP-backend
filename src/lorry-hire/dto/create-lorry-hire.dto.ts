@@ -1,133 +1,197 @@
+import {
+  IsString,
+  IsOptional,
+  IsNumber,
+  IsBoolean,
+  IsDateString,
+  IsInt,
+  IsArray,
+  IsIn,
+} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsOptional, IsNumber, IsBoolean, IsDateString, IsInt, IsArray ,IsIn} from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class CreateLorryHireDto {
-  @ApiProperty({ example: "LHC-2024-0001", description: "Challan number (unique per company/year or manual)" })
+  // -------------------------
+  // CORE
+  // -------------------------
+
+  @ApiProperty({ example: "LHC-2024-0001" })
   @IsString()
   challanNumber: string;
 
-  @ApiProperty({ example: "2024-05-10", description: "Challan date (ISO)" })
+  @ApiProperty({ example: "2024-05-10" })
   @IsDateString()
   challanDate: string;
 
-  @ApiPropertyOptional({ example: "2024-05-11", description: "Date when lorry hired / trip date" })
+  @ApiPropertyOptional({ example: "2024-05-11" })
   @IsOptional()
   @IsDateString()
   lorryHireDate?: string;
 
-  @ApiProperty({ example: "MH12AB1234", description: "Vehicle number" })
+  // -------------------------
+  // VEHICLE & DRIVER
+  // -------------------------
+
+  @ApiProperty({ example: "MH12AB1234" })
   @IsString()
   vehicleNo: string;
 
-  @ApiPropertyOptional({ example: "SLIP123", description: "Slip number from transporter" })
+  @ApiPropertyOptional({ example: "Ramesh Kumar" })
   @IsOptional()
   @IsString()
-  slipNo?: string;
+  driverName?: string;
 
-  @ApiPropertyOptional({ example: "Urgent delivery", description: "Remarks" })
+  @ApiPropertyOptional({ example: "MH2020123456789" })
+  @IsOptional()
+  @IsString()
+  driverLicenseNo?: string;
+
+  @ApiPropertyOptional({ example: "Urgent delivery" })
   @IsOptional()
   @IsString()
   remarks?: string;
 
-  @ApiProperty({ example: 1, description: "Lorry owner ID (link to LorryOwner)" })
+  // -------------------------
+  // PARTIES
+  // -------------------------
+
+  @ApiProperty({ example: 1 })
   @IsInt()
+  @Type(() => Number)
   lorryOwnerId: number;
 
-  @ApiPropertyOptional({ example: 2, description: "Optional broker ID" })
+  @ApiPropertyOptional({ example: 2 })
   @IsOptional()
   @IsInt()
+  @Type(() => Number)
   brokerId?: number;
 
-  @ApiPropertyOptional({ example: "ABCDE1234F", description: "PAN used for payment (owner or broker)" })
+  // -------------------------
+  // TDS
+  // -------------------------
+
+  @ApiPropertyOptional({ example: "ABCDE1234F" })
   @IsOptional()
   @IsString()
   panCardUsed?: string;
 
-    @ApiPropertyOptional({ example: "lorryOwner", enum: ['yes', 'no', 'broker', 'lorryOwner'], description: "Whether TDS applies and to whom" })
-    @IsOptional()
-    @IsString()
-    @IsIn(['yes', 'no', 'broker', 'lorryOwner'])
+  @ApiPropertyOptional({
+    example: "lorryOwner",
+    enum: ['yes', 'no', 'broker', 'lorryOwner'],
+  })
+  @IsOptional()
+  @IsIn(['yes', 'no', 'broker', 'lorryOwner'])
   tdsApplicable?: 'yes' | 'no' | 'broker' | 'lorryOwner';
 
-  @ApiPropertyOptional({ example: 2, description: "TDS percentage if applicable" })
+  @ApiPropertyOptional({ example: 2 })
   @IsOptional()
   @IsNumber()
+  @Type(() => Number)
   tdsPercent?: number;
 
-  @ApiProperty({ example: 1, description: "Destination ID (should come from your Destination master)" })
+  // -------------------------
+  // TRIP
+  // -------------------------
+
+  @ApiProperty({ example: 1 })
   @IsInt()
+@Type(() => Number)
   destinationId: number;
 
-  @ApiPropertyOptional({ example: 12, description: "Total packages for the challan (can be computed after adding consignments)" })
+  // -------------------------
+  // AMOUNTS
+  // -------------------------
+
+  @ApiPropertyOptional({ example: 12 })
   @IsOptional()
   @IsInt()
+  @Type(() => Number)
   totalPackages?: number;
 
-  @ApiPropertyOptional({ example: 980, description: "Total weight (kg or mt) - can be computed" })
+  @ApiPropertyOptional({ example: 980 })
   @IsOptional()
   @IsNumber()
+  @Type(() => Number)
   totalWeight?: number;
 
-  @ApiPropertyOptional({ example: 150, description: "Rate (per unit - mt or fixed)" })
+  @ApiPropertyOptional({ example: 150 })
   @IsOptional()
   @IsNumber()
+  @Type(() => Number)
   rate?: number;
 
-  @ApiPropertyOptional({ example: 147000, description: "Total lorry hire amount" })
+  @ApiPropertyOptional({ example: 147000 })
   @IsOptional()
   @IsNumber()
   lorryHire?: number;
 
-  @ApiPropertyOptional({ example: 20000, description: "Advance paid" })
+  @ApiPropertyOptional({ example: 20000 })
   @IsOptional()
   @IsNumber()
+  @Type(() => Number)
   advancePaid?: number;
 
-  @ApiPropertyOptional({ example: 0, description: "Balance payable (lorryHire - advance - tds - other)" })
+  @ApiPropertyOptional({ example: 500 })
   @IsOptional()
   @IsNumber()
-  balancePayable?: number;
-
-  @ApiPropertyOptional({ example: 500, description: "Loading charges" })
-  @IsOptional()
-  @IsNumber()
+  @Type(() => Number)
   loadingCharges?: number;
 
-  @ApiPropertyOptional({ example: 300, description: "Unloading charges" })
+  @ApiPropertyOptional({ example: 300 })
   @IsOptional()
   @IsNumber()
+  @Type(() => Number)
   unloadingCharges?: number;
 
-  @ApiPropertyOptional({ example: 0, description: "Diesel advance" })
+  @ApiPropertyOptional({ example: 0 })
   @IsOptional()
   @IsNumber()
+  @Type(() => Number)
   dieselAdvance?: number;
 
-  @ApiPropertyOptional({ example: false, description: "Whether GST applies on this hire" })
+  @ApiPropertyOptional({ example: false })
   @IsOptional()
   @IsBoolean()
   gstApplicable?: boolean;
 
-  @ApiPropertyOptional({ example: 0, description: "GST amount if applicable" })
+  @ApiPropertyOptional({ example: 0 })
   @IsOptional()
   @IsNumber()
+  @Type(() => Number)
   gstAmount?: number;
 
-  @ApiProperty({ example: 1, description: "Company ID for multi-tenancy" })
+  // -------------------------
+  // ORG
+  // -------------------------
+
+  @ApiProperty({ example: 1 })
   @IsInt()
+@Type(() => Number)
   companyId: number;
 
-  @ApiProperty({ example: 1, description: "Branch ID" })
+  @ApiProperty({ example: 1 })
   @IsInt()
+@Type(() => Number)
   branchId: number;
 
-  @ApiProperty({ example: 1, description: "Financial year id" })
+  @ApiProperty({ example: 1 })
   @IsInt()
+@Type(() => Number)
+
   financialYearId: number;
 
-  // Optional: add initial consignments in create call
-  @ApiPropertyOptional({ example: [1001, 1002], description: "Array of consignment note IDs to attach" })
+  // -------------------------
+  // CONSIGNMENTS
+  // -------------------------
+
+  @ApiPropertyOptional({
+    example: [1, 2],
+    description: "Consignment IDs to attach",
+  })
   @IsOptional()
   @IsArray()
+  @IsInt({ each: true })
+  @Type(() => Number)
   consignmentIds?: number[];
 }

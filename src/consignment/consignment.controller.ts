@@ -63,7 +63,6 @@ async getOne(@Param('id') id: string) {
     if (dto.consigneeId) dto.consigneeId = Number(dto.consigneeId);
     if (dto.fromDestinationId) dto.fromDestinationId = Number(dto.fromDestinationId);
     if (dto.toDestinationId) dto.toDestinationId = Number(dto.toDestinationId);
-    if (dto.brokerId) dto.brokerId = Number(dto.brokerId);
 
     return this.service.update(Number(id), dto);
   }

@@ -1,60 +1,61 @@
-import { IsOptional, IsString, IsNumber } from 'class-validator';
+import { IsOptional, IsString, IsNumber, IsDateString } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 
 export class SearchConsignmentDto {
-  @ApiPropertyOptional({
-    example: "1001",
-    description: "Filter by consignment number",
-  })
+  @ApiPropertyOptional({ example: "1001" })
   @IsOptional()
   @IsString()
   cnNumber?: string;
 
-  @ApiPropertyOptional({
-    example: "MH12AB1234",
-    description: "Filter by vehicle number",
-  })
+  @ApiPropertyOptional({ example: 1 })
   @IsOptional()
-  @IsString()
-  vehicleNo?: string;
-
-  @ApiPropertyOptional({
-    example: 1,
-    description: "Filter by consignor customer ID",
-  })
-  @IsOptional()
+  @Type(() => Number)
   @IsNumber()
   consignorId?: number;
 
-  @ApiPropertyOptional({
-    example: 2,
-    description: "Filter by consignee customer ID",
-  })
+  @ApiPropertyOptional({ example: 2 })
   @IsOptional()
+  @Type(() => Number)
   @IsNumber()
   consigneeId?: number;
 
+  // ⭐ ADDED
   @ApiPropertyOptional({
-    example: 1,
-    description: "Filter by company ID",
+    example: 3,
+    description: "Customer who will be billed",
   })
   @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  billedToId?: number;
+
+  @ApiPropertyOptional({ example: 1 })
+  @IsOptional()
+  @Type(() => Number)
   @IsNumber()
   companyId?: number;
 
-  @ApiPropertyOptional({
-    example: 2,
-    description: "Filter by branch ID",
-  })
+  @ApiPropertyOptional({ example: 2 })
   @IsOptional()
+  @Type(() => Number)
   @IsNumber()
   branchId?: number;
 
-  @ApiPropertyOptional({
-    example: 1,
-    description: "Filter by financial year ID",
-  })
+  @ApiPropertyOptional({ example: 1 })
   @IsOptional()
+  @Type(() => Number)
   @IsNumber()
   financialYearId?: number;
+
+  // ⭐ STRONGLY RECOMMENDED
+  @ApiPropertyOptional({ example: "2024-04-01" })
+  @IsOptional()
+  @IsDateString()
+  fromDate?: string;
+
+  @ApiPropertyOptional({ example: "2024-04-30" })
+  @IsOptional()
+  @IsDateString()
+  toDate?: string;
 }

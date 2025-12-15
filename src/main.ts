@@ -16,10 +16,16 @@ async function bootstrap() {
 
   // 🔹 GLOBAL VALIDATION PIPE
   app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-    }),
-  );
+  new ValidationPipe({
+    transform: true,
+    whitelist: true,
+    forbidNonWhitelisted: true,
+    transformOptions: {
+      enableImplicitConversion: true,
+    },
+  }),
+);
+
 
   // 🔹 SWAGGER SETUP
   const config = new DocumentBuilder()

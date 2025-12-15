@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateConsignmentDto } from './dto/create-consignment.dto';
 import { UpdateConsignmentDto } from './dto/update-consignment.dto';
@@ -12,7 +16,7 @@ export class ConsignmentService {
   // CREATE
   // -------------------------------------------------------------------------
   async create(dto: CreateConsignmentDto, userId: number) {
-    // 1. Validate financialYearId belongs to the company
+    // 1️⃣ Validate financial year belongs to company
     const fy = await this.prisma.financialYear.findFirst({
       where: {
         id: dto.financialYearId,
@@ -21,10 +25,22 @@ export class ConsignmentService {
     });
 
     if (!fy) {
-      throw new BadRequestException("Invalid financial year for this company");
+      throw new BadRequestException(
+        'Invalid financial year for this company',
+      );
     }
 
-    // 2. Ensure CN number is unique in company + FY
+    // 2️⃣ Validate billedToId (must be consignor or consignee)
+    if (
+      dto.billedToId !== dto.consignorId &&
+      dto.billedToId !== dto.consigneeId
+    ) {
+      throw new BadRequestException(
+        'Billed To must be either Consignor or Consignee',
+      );
+    }
+
+    // 3️⃣ Ensure CN number is unique within company + FY
     const duplicate = await this.prisma.consignmentNote.findFirst({
       where: {
         cnNumber: dto.cnNumber,
@@ -35,11 +51,11 @@ export class ConsignmentService {
 
     if (duplicate) {
       throw new BadRequestException(
-        "Consignment number already exists in this financial year"
+        'Consignment number already exists in this financial year',
       );
     }
 
-    // 3. Create CN
+    // 4️⃣ Create consignment
     return this.prisma.consignmentNote.create({
       data: {
         ...dto,
@@ -49,9 +65,8 @@ export class ConsignmentService {
     });
   }
 
-
   // -------------------------------------------------------------------------
-  // LIST ALL (company + FY)
+  // LIST ALL (Company + Financial Year)
   // -------------------------------------------------------------------------
   async findAll(companyId: number, financialYearId: number) {
     return this.prisma.consignmentNote.findMany({
@@ -60,13 +75,12 @@ export class ConsignmentService {
       include: {
         consignor: { select: { id: true, companyName: true } },
         consignee: { select: { id: true, companyName: true } },
+        billedTo: { select: { id: true, companyName: true } },
         fromDestination: { select: { id: true, name: true } },
         toDestination: { select: { id: true, name: true } },
-        broker: { select: { id: true, name: true } },
       },
     });
   }
-
 
   // -------------------------------------------------------------------------
   // SEARCH
@@ -75,55 +89,62 @@ export class ConsignmentService {
     return this.prisma.consignmentNote.findMany({
       where: {
         cnNumber: filters.cnNumber
-          ? { contains: filters.cnNumber, mode: "insensitive" }
+          ? { contains: filters.cnNumber, mode: 'insensitive' }
           : undefined,
 
-        vehicleNo: filters.vehicleNo
-          ? { contains: filters.vehicleNo, mode: "insensitive" }
-          : undefined,
+        consignorId: filters.consignorId,
+        consigneeId: filters.consigneeId,
+        billedToId: filters.billedToId,
 
-        consignorId: filters.consignorId || undefined,
-        consigneeId: filters.consigneeId || undefined,
-        companyId: filters.companyId || undefined,
-        branchId: filters.branchId || undefined,
-        financialYearId: filters.financialYearId || undefined,
+        companyId: filters.companyId,
+        branchId: filters.branchId,
+        financialYearId: filters.financialYearId,
+
+        // 📅 Date range filter
+        date:
+          filters.fromDate && filters.toDate
+            ? {
+                gte: new Date(filters.fromDate),
+                lte: new Date(filters.toDate),
+              }
+            : undefined,
       },
 
-      orderBy: { date: "desc" },
+      orderBy: { date: 'desc' },
 
       include: {
         consignor: { select: { id: true, companyName: true } },
         consignee: { select: { id: true, companyName: true } },
+        billedTo: { select: { id: true, companyName: true } },
         fromDestination: { select: { id: true, name: true } },
         toDestination: { select: { id: true, name: true } },
-        broker: { select: { id: true, name: true } },
       },
     });
   }
 
-
   // -------------------------------------------------------------------------
-  // FIND ONE (for edit page)
+  // FIND ONE (Edit / View)
   // -------------------------------------------------------------------------
   async findOne(id: number) {
-  const consignment = await this.prisma.consignmentNote.findUnique({
-    where: { id },
-    include: {
-      consignor: { select: { id: true, companyName: true } },
-      consignee: { select: { id: true, companyName: true } },
-      fromDestination: { select: { id: true, name: true } },
-      toDestination: { select: { id: true, name: true } },
-      broker: { select: { id: true, name: true } },
+    const consignment = await this.prisma.consignmentNote.findUnique({
+      where: { id },
+      include: {
+        consignor: { select: { id: true, companyName: true } },
+        consignee: { select: { id: true, companyName: true } },
+        billedTo: { select: { id: true, companyName: true } },
+        fromDestination: { select: { id: true, name: true } },
+        toDestination: { select: { id: true, name: true } },
+      },
+    });
+
+    if (!consignment) {
+      throw new NotFoundException(
+        `Consignment with ID ${id} not found`,
+      );
     }
-  });
 
-  if (!consignment) {
-    throw new NotFoundException(`Consignment with ID ${id} not found.`);
+    return consignment;
   }
-
-  return consignment;
-}
-
 
   // -------------------------------------------------------------------------
   // UPDATE
@@ -134,30 +155,43 @@ export class ConsignmentService {
     });
 
     if (!existing) {
-      throw new NotFoundException(`Consignment with ID ${id} not found.`);
+      throw new NotFoundException(
+        `Consignment with ID ${id} not found`,
+      );
     }
 
-    // prepare update payload
+    // 1️⃣ Validate billedToId if changed
+    if (
+      dto.billedToId &&
+      dto.billedToId !== existing.consignorId &&
+      dto.billedToId !== existing.consigneeId
+    ) {
+      throw new BadRequestException(
+        'Billed To must be either Consignor or Consignee',
+      );
+    }
+
     const dataToUpdate: any = { ...dto };
 
     if (dto.date) {
       dataToUpdate.date = new Date(dto.date);
     }
 
-    // Prevent duplicate CN number (ONLY if CN number changed)
+    // 2️⃣ Prevent CN number duplication
     if (dto.cnNumber && dto.cnNumber !== existing.cnNumber) {
       const duplicate = await this.prisma.consignmentNote.findFirst({
         where: {
           cnNumber: dto.cnNumber,
           companyId: dto.companyId ?? existing.companyId,
-          financialYearId: dto.financialYearId ?? existing.financialYearId,
-          NOT: { id }, // exclude current CN
+          financialYearId:
+            dto.financialYearId ?? existing.financialYearId,
+          NOT: { id },
         },
       });
 
       if (duplicate) {
         throw new BadRequestException(
-          "Consignment number already exists in this financial year."
+          'Consignment number already exists in this financial year',
         );
       }
     }
@@ -168,7 +202,6 @@ export class ConsignmentService {
     });
   }
 
-
   // -------------------------------------------------------------------------
   // DELETE
   // -------------------------------------------------------------------------
@@ -178,8 +211,13 @@ export class ConsignmentService {
     });
 
     if (!exists) {
-      throw new NotFoundException(`Consignment with ID ${id} not found.`);
+      throw new NotFoundException(
+        `Consignment with ID ${id} not found`,
+      );
     }
+
+    // ⛔ Future safeguard (recommended):
+    // prevent delete if invoiced or linked to challan
 
     return this.prisma.consignmentNote.delete({
       where: { id },
